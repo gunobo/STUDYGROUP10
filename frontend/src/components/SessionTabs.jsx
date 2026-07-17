@@ -15,7 +15,11 @@ export default function SessionTabs({ session }) {
     <div className="session-tabs">
       <div className="session-tabs__nav">
         {TABS.map((tab) => (
-          <button key={tab.key} onClick={() => setActive(tab.key)}>
+          <button
+            key={tab.key}
+            className={tab.key === active ? "is-active" : ""}
+            onClick={() => setActive(tab.key)}
+          >
             {tab.label}
           </button>
         ))}

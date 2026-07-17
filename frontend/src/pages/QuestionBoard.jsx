@@ -25,7 +25,7 @@ export default function QuestionBoard() {
   return (
     <section>
       <h1>질문 게시판</h1>
-      <form onSubmit={submit}>
+      <form className="question-form" onSubmit={submit}>
         <input value={content} onChange={(e) => setContent(e.target.value)} placeholder="질문을 입력하세요" />
         <button type="submit">등록</button>
       </form>

@@ -14,7 +14,11 @@ export default function Fines() {
   return (
     <section>
       <h1>벌금 현황</h1>
-      {summary && <p>회식비 총액: {summary.total_amount}원</p>}
+      {summary && (
+        <p className="fines-total">
+          회식비 총액 <strong>{summary.total_amount.toLocaleString()}원</strong>
+        </p>
+      )}
       <FineTable fines={fines} />
     </section>
   );

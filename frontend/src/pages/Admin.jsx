@@ -56,7 +56,14 @@ export default function Admin() {
       <ul>
         {applications.map((a) => (
           <li key={a.id}>
-            <strong>{a.name}</strong> ({a.email} / {a.phone || "연락처 없음"}) — {a.status}
+            <strong>{a.name}</strong> ({a.email} / {a.phone || "연락처 없음"}){" "}
+            <span
+              className={`badge ${
+                a.status === "승인" ? "badge--approved" : a.status === "거절" ? "badge--rejected" : "badge--pending"
+              }`}
+            >
+              {a.status}
+            </span>
             <p>{a.motivation}</p>
             {a.status === "승인" && (
               <p>

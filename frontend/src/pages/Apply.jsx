@@ -23,8 +23,8 @@ export default function Apply() {
 
   if (submitted) {
     return (
-      <section>
-        <h1>참가 신청</h1>
+      <section className="login-card">
+        <h1>신청 완료</h1>
         <p>신청이 접수되었습니다. 검토 후 연락드리겠습니다.</p>
       </section>
     );

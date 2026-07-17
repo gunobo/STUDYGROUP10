@@ -1,4 +1,4 @@
-import { Link, Route, Routes } from "react-router-dom";
+import { NavLink, Route, Routes } from "react-router-dom";
 import AuthGuard from "./components/AuthGuard";
 import Admin from "./pages/Admin";
 import Apply from "./pages/Apply";
@@ -14,15 +14,22 @@ import SessionDetail from "./pages/SessionDetail";
 export default function App() {
   return (
     <div className="app">
-      <nav className="app__nav">
-        <Link to="/">홈</Link>
-        <Link to="/apply">참가 신청</Link>
-        <Link to="/schedule">일정표</Link>
-        <Link to="/fines">벌금 현황</Link>
-        <Link to="/members">참가자 목록</Link>
-        <Link to="/mypage">마이페이지</Link>
-        <Link to="/admin">관리자</Link>
-      </nav>
+      <header className="app__header">
+        <div className="app__brand">
+          <span>study</span>2026
+        </div>
+        <nav className="app__nav">
+          <NavLink to="/" end>
+            홈
+          </NavLink>
+          <NavLink to="/apply">참가 신청</NavLink>
+          <NavLink to="/schedule">일정표</NavLink>
+          <NavLink to="/fines">벌금 현황</NavLink>
+          <NavLink to="/members">참가자 목록</NavLink>
+          <NavLink to="/mypage">마이페이지</NavLink>
+          <NavLink to="/admin">관리자</NavLink>
+        </nav>
+      </header>
 
       <main className="app__main">
         <Routes>
