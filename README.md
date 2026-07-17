@@ -52,13 +52,13 @@ study2026 전용 터널을 CLI로 새로 파서 `docker-compose.yml`의 `cloudfl
 mkdir -p cloudflared
 
 # 1) 로그인 (URL이 출력되면 브라우저에서 열어 bssm.dev 선택 후 승인)
-docker run -it --rm -v $(pwd)/cloudflared:/home/nonroot/.cloudflared cloudflare/cloudflared:latest tunnel login
+docker run -it --rm -u $(id -u):$(id -g) -v $(pwd)/cloudflared:/home/nonroot/.cloudflared cloudflare/cloudflared:latest tunnel login
 
 # 2) 터널 생성 (출력되는 UUID를 기록해두기)
-docker run -it --rm -v $(pwd)/cloudflared:/home/nonroot/.cloudflared cloudflare/cloudflared:latest tunnel create study2026
+docker run -it --rm -u $(id -u):$(id -g) -v $(pwd)/cloudflared:/home/nonroot/.cloudflared cloudflare/cloudflared:latest tunnel create study2026
 
 # 3) DNS 라우팅 (study2026.bssm.dev → 이 터널)
-docker run -it --rm -v $(pwd)/cloudflared:/home/nonroot/.cloudflared cloudflare/cloudflared:latest tunnel route dns study2026 study2026.bssm.dev
+docker run -it --rm -u $(id -u):$(id -g) -v $(pwd)/cloudflared:/home/nonroot/.cloudflared cloudflare/cloudflared:latest tunnel route dns study2026 study2026.bssm.dev
 ```
 
 `cloudflared/config.yml` 생성 (2번에서 나온 UUID로 `<TUNNEL_UUID>` 교체):
