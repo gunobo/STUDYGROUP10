@@ -97,6 +97,8 @@ a {
   font-size: 0.88rem;
   font-weight: 600;
   color: var(--color-text-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
   transition: background 0.15s ease, color 0.15s ease;
 }
 
@@ -450,6 +452,37 @@ section > ul > li > a {
   color: var(--color-text);
 }
 
+.qa-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  white-space: normal;
+}
+
+.qa-tab__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.qa-tab__list li {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 0.9rem;
+}
+
+.qa-tab__link {
+  align-self: flex-start;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.qa-tab__link:hover {
+  text-decoration: underline;
+}
+
 /* ---------- question item ---------- */
 
 .question-item {
@@ -484,8 +517,15 @@ section > ul > li > a {
 
 /* ---------- fine table ---------- */
 
+.table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: var(--radius-lg);
+}
+
 .fine-table {
   width: 100%;
+  min-width: 420px;
   border-collapse: collapse;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -749,5 +789,57 @@ section h3 {
 
   .role-grid {
     grid-template-columns: 1fr;
+  }
+
+  section > h1 {
+    font-size: 1.5rem;
+  }
+
+  form {
+    padding: 1.1rem;
+  }
+
+  .login-card {
+    padding: 2rem 1.25rem;
+    margin-top: 1rem;
+  }
+
+  .quote--closing {
+    font-size: 0.95rem;
+    padding: 1.25rem 1rem;
+  }
+
+  .flow-row {
+    gap: 0.35rem;
+  }
+
+  .flow-row__step {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.8rem;
+  }
+
+  .approve-form label {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.35rem;
+  }
+
+  .radio-row {
+    gap: 1rem;
+  }
+
+  .fine-table th,
+  .fine-table td {
+    padding: 0.6rem 0.75rem;
+    font-size: 0.82rem;
+  }
+
+  .session-tabs__nav button {
+    padding: 0.45rem 0.8rem;
+    font-size: 0.85rem;
+  }
+
+  .app__brand {
+    font-size: 0.95rem;
   }
 }

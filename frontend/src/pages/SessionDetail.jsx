@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import client from "../api/client";
 import SessionTabs from "../components/SessionTabs";
 
@@ -23,7 +23,6 @@ export default function SessionDetail() {
         </a>
       )}
       <SessionTabs session={session} />
-      <Link to={`/sessions/${id}/questions`}>질문 게시판 보기</Link>
     </section>
   );
 }

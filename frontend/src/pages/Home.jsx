@@ -105,22 +105,24 @@ export default function Home() {
       </div>
 
       <h2>벌금</h2>
-      <table className="fine-table">
-        <thead>
-          <tr>
-            <th>상황</th>
-            <th>벌금</th>
-          </tr>
-        </thead>
-        <tbody>
-          {FINE_RULES.map((rule) => (
-            <tr key={rule.situation}>
-              <td>{rule.situation}</td>
-              <td>{rule.amount}</td>
+      <div className="table-wrap">
+        <table className="fine-table">
+          <thead>
+            <tr>
+              <th>상황</th>
+              <th>벌금</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {FINE_RULES.map((rule) => (
+              <tr key={rule.situation}>
+                <td>{rule.situation}</td>
+                <td>{rule.amount}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
       <p className="note">
         벌금은 모두 모아 회식비로 사용합니다. (벌금이 안 모이면 스터디장이 사줄듯)
       </p>

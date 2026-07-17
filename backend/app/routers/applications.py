@@ -37,12 +37,24 @@ def _approval_message(application: Application) -> str:
     )
 
 
+@router.get("/window", response_model=ApplicationWindow)
+def get_application_window():
+    return ApplicationWindow(
+        opens_at=settings.application_opens_at,
+        closes_at=settings.application_closes_at,
+        is_open=_is_application_open(),
+    )
+
+
 @router.post("", response_model=ApplicationRead, status_code=status.HTTP_201_CREATED)
 def create_application(
     payload: ApplicationCreate,
     db: DBSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
+    if not _is_application_open():
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "지금은 신청 기간이 아닙니다")
+
     existing = (
         db.query(Application)
         .filter(Application.user_id == user.id, Application.status != ApplicationStatus.rejected)

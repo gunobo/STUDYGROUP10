@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import client from "../api/client";
 
 const initialForm = {
@@ -11,10 +11,25 @@ const initialForm = {
   rules_agreed: "",
 };
 
+const formatDate = (value) =>
+  value
+    ? new Date(value).toLocaleString("ko-KR", {
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : null;
+
 export default function Apply() {
   const [form, setForm] = useState(initialForm);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
+  const [window_, setWindow] = useState(null);
+
+  useEffect(() => {
+    client.get("/applications/window").then(({ data }) => setWindow(data));
+  }, []);
 
   const update = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
 
@@ -65,6 +80,29 @@ export default function Apply() {
       <section className="login-card">
         <h1>신청 완료</h1>
         <p>신청이 접수되었습니다. 검토 후 연락드리겠습니다.</p>
+      </section>
+    );
+  }
+
+  if (window_ === null) {
+    return null;
+  }
+
+  if (!window_.is_open) {
+    const opens = formatDate(window_.opens_at);
+    const closes = formatDate(window_.closes_at);
+    return (
+      <section className="login-card">
+        <h1>신청 기간이 아닙니다</h1>
+        <p>
+          {opens && closes
+            ? `신청 기간: ${opens} ~ ${closes}`
+            : opens
+              ? `신청은 ${opens}부터 시작됩니다.`
+              : closes
+                ? `신청은 ${closes}에 마감되었습니다.`
+                : "현재 참가 신청을 받고 있지 않습니다."}
+        </p>
       </section>
     );
   }
