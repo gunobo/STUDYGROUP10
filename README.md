@@ -40,9 +40,12 @@ npm run dev
 cp .env.example .env
 docker compose up --build
 ```
-- frontend: http://localhost
-- backend: http://localhost:8000
-- mysql: localhost:3306
+파이 서버에 다른 프로젝트들(giftlink, meistertrack, jeminmail 등)이 이미 5100~5102, 8001~8004, 3305/3310~3312 등의 포트를 쓰고 있어 겹치지 않는 포트로 고정했습니다.
+- frontend: http://localhost:5103
+- backend: http://localhost:8005
+- mysql: localhost:3313
+
+배포 시 cloudflared ingress에서는 `http://localhost:5103`(frontend)을 study2026.bssm.dev로 연결합니다.
 
 ## 프로젝트 구조
 ```
