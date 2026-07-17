@@ -2,8 +2,9 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session as DBSession
 
 from app.db.base import get_db
-from app.deps import require_admin
+from app.deps import get_current_user, require_admin
 from app.models.application import Application, ApplicationStatus
+from app.models.user import User
 from app.schemas.application import ApplicationCreate, ApplicationRead, ApplicationUpdate
 from app.senders.sms import send_sms
 
@@ -20,8 +21,20 @@ def _approval_message(application: Application) -> str:
 
 
 @router.post("", response_model=ApplicationRead, status_code=status.HTTP_201_CREATED)
-def create_application(payload: ApplicationCreate, db: DBSession = Depends(get_db)):
-    application = Application(**payload.model_dump())
+def create_application(
+    payload: ApplicationCreate,
+    db: DBSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    existing = (
+        db.query(Application)
+        .filter(Application.user_id == user.id, Application.status != ApplicationStatus.rejected)
+        .first()
+    )
+    if existing is not None:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "이미 신청 내역이 있습니다")
+
+    application = Application(user_id=user.id, **payload.model_dump())
     db.add(application)
     db.commit()
     db.refresh(application)

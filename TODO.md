@@ -20,7 +20,8 @@
 ## 2. 데이터 모델 / 백엔드
 - [x] users, sessions, questions, feedbacks, fines, attendances 테이블 모델
 - [x] 세션/질문/피드백/벌금/유저 기본 CRUD 라우터
-- [x] applications 테이블 + API (참가 신청: 공개 `POST /api/applications`, admin `GET/PATCH`) — `.claude/claude.md`에는 없던 신규 기능, 자체 회원가입 없이 구글 로그인만 지원한다는 기존 정책과 별개로 "모집 단계 지원서 검토" 용도로 추가
+- [x] applications 테이블 + API (참가 신청: 로그인 필요 `POST /api/applications`, admin `GET/PATCH`) — `.claude/claude.md`에는 없던 신규 기능, "모집 단계 지원서 검토" 용도로 추가. 필드: 학번/이름/전화번호/공부할 분야(2개+)/설명회 참여 가능 시간/개인정보 수집 동의/스터디 규칙 동의, `user_id`로 로그인 계정과 연결
+- [ ] applications 테이블 스키마가 바뀌었으므로(email/motivation 컬럼 제거, user_id/student_id/topics 등 추가) 기존에 `docker compose up`으로 이미 만들어진 MySQL 볼륨이 있다면 `docker compose down -v`로 볼륨 삭제 후 재기동 필요 (Alembic 없이 `create_all`만 쓰고 있어 기존 테이블에 컬럼이 자동으로 추가되지 않음)
 - [x] SolAPI SMS 연동 (`app/senders/solapi_client.py`, `app/senders/sms.py` — GIFTLINK 프로젝트에서 이식) — 관리자가 승인하며 설명회 일시/장소를 입력하면 신청자 휴대폰으로 안내 문자 발송
 - [ ] `.env`에 실제 `SOLAPI_API_KEY` / `SOLAPI_API_SECRET` / `SOLAPI_SENDER_PHONE`(SolAPI에 등록된 발신번호) 채우기 — 비어있으면 승인은 되지만 문자 발송 실패(502) 처리됨
 - [ ] applications 승인 시 실제 계정 연결/알림 로직은 없음 (승인해도 자동으로 로그인 권한이 생기는 게 아니라 여전히 학교 구글 계정 로그인이 기준 — 운영 방식 확정 필요)
@@ -35,7 +36,7 @@
 ## 3. 프론트엔드 페이지
 - [x] 라우팅 스켈레톤 (`/`, `/apply`, `/schedule`, `/sessions/:id`, `/sessions/:id/questions`, `/fines`, `/members`, `/mypage`, `/login`, `/admin`)
 - [x] AuthGuard (로그인/관리자 전용 라우트 보호)
-- [x] `/apply` 참가 신청 폼 (이름/이메일/연락처/지원동기, 로그인 불필요) + `/admin`에 승인/거절 UI
+- [x] `/apply` 참가 신청 폼 (로그인 필요, 학번/이름/전화번호/공부 분야 2개+/설명회 가능 시간/개인정보 동의/규칙 동의) + `/admin`에 승인/거절 UI
 - [x] `/admin` 승인 시 설명회 일시/장소 입력 폼 → 승인 확정과 동시에 SolAPI 문자 발송
 - [ ] `/apply` 제출 후 이메일 등 확인 알림 (현재는 화면 안내 문구만)
 - [ ] `/` 홈: 다음 발표자뿐 아니라 최근 미해결 질문 요약 노출

@@ -34,7 +34,14 @@ export default function App() {
       <main className="app__main">
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/apply" element={<Apply />} />
+          <Route
+            path="/apply"
+            element={
+              <AuthGuard>
+                <Apply />
+              </AuthGuard>
+            }
+          />
           <Route path="/schedule" element={<Schedule />} />
           <Route path="/sessions/:id" element={<SessionDetail />} />
           <Route path="/sessions/:id/questions" element={<QuestionBoard />} />

@@ -69,7 +69,7 @@ export default function Admin() {
       <ul>
         {applications.map((a) => (
           <li key={a.id}>
-            <strong>{a.name}</strong> ({a.email} / {a.phone || "연락처 없음"}){" "}
+            <strong>{a.name}</strong> ({a.student_id} / {a.user.email} / {a.phone}){" "}
             <span
               className={`badge ${
                 a.status === "승인" ? "badge--approved" : a.status === "거절" ? "badge--rejected" : "badge--pending"
@@ -77,7 +77,8 @@ export default function Admin() {
             >
               {a.status}
             </span>
-            <p>{a.motivation}</p>
+            <p>분야: {a.topics.join(", ")}</p>
+            <p>설명회 참여 가능 시간: {a.available_time}</p>
             {a.status === "승인" && (
               <p>
                 설명회: {a.orientation_at ? new Date(a.orientation_at).toLocaleString() : "미정"} /{" "}

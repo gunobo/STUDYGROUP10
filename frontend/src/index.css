@@ -251,6 +251,52 @@ form > button {
   flex-shrink: 0;
 }
 
+.checkbox-row {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 0.6rem;
+  font-weight: 400;
+  font-size: 0.85rem;
+  color: var(--color-text);
+  line-height: 1.5;
+}
+
+.checkbox-row input {
+  width: auto;
+  margin-top: 0.2rem;
+  flex-shrink: 0;
+}
+
+.radio-row {
+  display: flex;
+  flex-direction: row;
+  gap: 1.5rem;
+  margin-top: 0.4rem;
+}
+
+.radio-row label {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.35rem;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.radio-row input {
+  width: auto;
+}
+
+.topic-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-top: 0.4rem;
+}
+
+.topic-row input {
+  flex: 1;
+}
+
 /* ---------- cards / lists ---------- */
 
 section > ul {
