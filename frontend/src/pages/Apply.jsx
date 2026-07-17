@@ -25,10 +25,10 @@ export default function Apply() {
   const [form, setForm] = useState(initialForm);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
-  const [window_, setWindow] = useState(null);
+  const [settings, setSettings] = useState(null);
 
   useEffect(() => {
-    client.get("/applications/window").then(({ data }) => setWindow(data));
+    client.get("/settings").then(({ data }) => setSettings(data));
   }, []);
 
   const update = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
@@ -84,13 +84,13 @@ export default function Apply() {
     );
   }
 
-  if (window_ === null) {
+  if (settings === null) {
     return null;
   }
 
-  if (!window_.is_open) {
-    const opens = formatDate(window_.opens_at);
-    const closes = formatDate(window_.closes_at);
+  if (!settings.is_open) {
+    const opens = formatDate(settings.application_opens_at);
+    const closes = formatDate(settings.application_closes_at);
     return (
       <section className="login-card">
         <h1>신청 기간이 아닙니다</h1>
@@ -106,6 +106,8 @@ export default function Apply() {
       </section>
     );
   }
+
+  const orientationOptions = settings.orientation_options ?? [];
 
   return (
     <section>
@@ -142,15 +144,32 @@ export default function Apply() {
           </button>
         </div>
 
-        <label>
-          설명회 참여 가능 시간
-          <input
-            required
-            value={form.available_time}
-            onChange={update("available_time")}
-            placeholder="예: 평일 저녁 7시 이후"
-          />
-        </label>
+        <div>
+          <label>설명회 참여 가능 시간</label>
+          {orientationOptions.length > 0 ? (
+            <div className="radio-col">
+              {orientationOptions.map((option) => (
+                <label key={option}>
+                  <input
+                    type="radio"
+                    name="available_time"
+                    value={option}
+                    checked={form.available_time === option}
+                    onChange={update("available_time")}
+                  />
+                  {option}
+                </label>
+              ))}
+            </div>
+          ) : (
+            <input
+              required
+              value={form.available_time}
+              onChange={update("available_time")}
+              placeholder="예: 평일 저녁 7시 이후"
+            />
+          )}
+        </div>
 
         <label className="checkbox-row">
           <input

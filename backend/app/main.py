@@ -4,7 +4,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from app.core.config import settings
 from app.db.base import Base, engine
-from app.routers import applications, auth, feedbacks, fines, questions, sessions, users
+from app.routers import applications, auth, feedbacks, fines, questions, sessions, settings as settings_router, users
 
 Base.metadata.create_all(bind=engine)
 
@@ -27,6 +27,7 @@ app.include_router(feedbacks.router)
 app.include_router(fines.router)
 app.include_router(users.router)
 app.include_router(applications.router)
+app.include_router(settings_router.router)
 
 
 @app.get("/api/health")

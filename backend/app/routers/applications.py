@@ -1,31 +1,15 @@
-from datetime import datetime
-
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session as DBSession
 
-from app.core.config import settings
 from app.db.base import get_db
 from app.deps import get_current_user, require_admin
 from app.models.application import Application, ApplicationStatus
 from app.models.user import User
-from app.schemas.application import (
-    ApplicationCreate,
-    ApplicationRead,
-    ApplicationUpdate,
-    ApplicationWindow,
-)
+from app.schemas.application import ApplicationCreate, ApplicationRead, ApplicationUpdate
 from app.senders.sms import send_sms
+from app.services.settings import get_settings, is_application_open
 
 router = APIRouter(prefix="/api/applications", tags=["applications"])
-
-
-def _is_application_open(now: datetime | None = None) -> bool:
-    now = now or datetime.now()
-    if settings.application_opens_at and now < settings.application_opens_at:
-        return False
-    if settings.application_closes_at and now > settings.application_closes_at:
-        return False
-    return True
 
 
 def _approval_message(application: Application) -> str:
@@ -37,22 +21,13 @@ def _approval_message(application: Application) -> str:
     )
 
 
-@router.get("/window", response_model=ApplicationWindow)
-def get_application_window():
-    return ApplicationWindow(
-        opens_at=settings.application_opens_at,
-        closes_at=settings.application_closes_at,
-        is_open=_is_application_open(),
-    )
-
-
 @router.post("", response_model=ApplicationRead, status_code=status.HTTP_201_CREATED)
 def create_application(
     payload: ApplicationCreate,
     db: DBSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    if not _is_application_open():
+    if not is_application_open(get_settings(db)):
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "지금은 신청 기간이 아닙니다")
 
     existing = (

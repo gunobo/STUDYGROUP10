@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import client from "../api/client";
 import { useAuthStore } from "../store/useAuthStore";
 
+const toDatetimeLocal = (iso) => (iso ? iso.slice(0, 16) : "");
+
 export default function Admin() {
   const currentUser = useAuthStore((state) => state.user);
   const [sessions, setSessions] = useState([]);
@@ -13,6 +15,10 @@ export default function Admin() {
   const [orientationPlace, setOrientationPlace] = useState("");
   const [approveError, setApproveError] = useState("");
 
+  const [settingsForm, setSettingsForm] = useState({ opensAt: "", closesAt: "", options: [""] });
+  const [settingsSaving, setSettingsSaving] = useState(false);
+  const [settingsSaved, setSettingsSaved] = useState(false);
+
   const loadApplications = () => {
     client.get("/applications").then(({ data }) => setApplications(data));
   };
@@ -21,16 +27,57 @@ export default function Admin() {
     client.get("/users").then(({ data }) => setUsers(data));
   };
 
+  const loadSettings = () => {
+    client.get("/settings").then(({ data }) => {
+      setSettingsForm({
+        opensAt: toDatetimeLocal(data.application_opens_at),
+        closesAt: toDatetimeLocal(data.application_closes_at),
+        options: data.orientation_options.length > 0 ? data.orientation_options : [""],
+      });
+    });
+  };
+
   useEffect(() => {
     client.get("/sessions").then(({ data }) => setSessions(data));
     client.get("/fines").then(({ data }) => setFines(data));
     loadApplications();
     loadUsers();
+    loadSettings();
   }, []);
 
   const changeRole = async (userId, role) => {
     await client.patch(`/users/${userId}`, { role });
     loadUsers();
+  };
+
+  const updateOption = (index) => (e) => {
+    setSettingsForm((f) => {
+      const options = [...f.options];
+      options[index] = e.target.value;
+      return { ...f, options };
+    });
+  };
+
+  const addOption = () => setSettingsForm((f) => ({ ...f, options: [...f.options, ""] }));
+
+  const removeOption = (index) =>
+    setSettingsForm((f) => ({ ...f, options: f.options.filter((_, i) => i !== index) }));
+
+  const saveSettings = async (e) => {
+    e.preventDefault();
+    setSettingsSaving(true);
+    setSettingsSaved(false);
+    try {
+      await client.patch("/settings", {
+        application_opens_at: settingsForm.opensAt || null,
+        application_closes_at: settingsForm.closesAt || null,
+        orientation_options: settingsForm.options.map((o) => o.trim()).filter(Boolean),
+      });
+      setSettingsSaved(true);
+      loadSettings();
+    } finally {
+      setSettingsSaving(false);
+    }
   };
 
   const startApprove = (application) => {
@@ -64,6 +111,52 @@ export default function Admin() {
   return (
     <section>
       <h1>관리자</h1>
+
+      <h2>설정</h2>
+      <form onSubmit={saveSettings}>
+        <label>
+          참가 신청 시작
+          <input
+            type="datetime-local"
+            value={settingsForm.opensAt}
+            onChange={(e) => setSettingsForm((f) => ({ ...f, opensAt: e.target.value }))}
+          />
+        </label>
+        <label>
+          참가 신청 마감
+          <input
+            type="datetime-local"
+            value={settingsForm.closesAt}
+            onChange={(e) => setSettingsForm((f) => ({ ...f, closesAt: e.target.value }))}
+          />
+        </label>
+
+        <div>
+          <label>설명회 참여 가능 시간 옵션 (신청자가 이 중에서 라디오로 선택)</label>
+          {settingsForm.options.map((option, i) => (
+            <div key={i} className="topic-row">
+              <input
+                value={option}
+                onChange={updateOption(i)}
+                placeholder="예: 7월 20일(월) 오후 9시"
+              />
+              {settingsForm.options.length > 1 && (
+                <button type="button" onClick={() => removeOption(i)}>
+                  삭제
+                </button>
+              )}
+            </div>
+          ))}
+          <button type="button" onClick={addOption}>
+            옵션 추가
+          </button>
+        </div>
+
+        <button type="submit" disabled={settingsSaving}>
+          {settingsSaving ? "저장 중..." : "설정 저장"}
+        </button>
+        {settingsSaved && <p className="note">저장되었습니다.</p>}
+      </form>
 
       <h2>참가 신청 관리</h2>
       <ul>
