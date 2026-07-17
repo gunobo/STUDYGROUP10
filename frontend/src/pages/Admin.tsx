@@ -18,6 +18,10 @@ interface SettingsForm {
   opensAt: string;
   closesAt: string;
   options: string[];
+  discordGuildId: string;
+  discordVoiceChannelId: string;
+  presentationTime: string;
+  presentationDurationMinutes: string;
 }
 
 interface SessionForm {
@@ -58,7 +62,15 @@ export default function Admin() {
   const [orientationPlace, setOrientationPlace] = useState("");
   const [approveError, setApproveError] = useState("");
 
-  const [settingsForm, setSettingsForm] = useState<SettingsForm>({ opensAt: "", closesAt: "", options: [""] });
+  const [settingsForm, setSettingsForm] = useState<SettingsForm>({
+    opensAt: "",
+    closesAt: "",
+    options: [""],
+    discordGuildId: "",
+    discordVoiceChannelId: "",
+    presentationTime: "",
+    presentationDurationMinutes: "",
+  });
   const [settingsSaving, setSettingsSaving] = useState(false);
   const [settingsSaved, setSettingsSaved] = useState(false);
 
@@ -112,6 +124,11 @@ export default function Admin() {
         opensAt: toDatetimeLocal(data.application_opens_at),
         closesAt: toDatetimeLocal(data.application_closes_at),
         options: data.orientation_options.length > 0 ? data.orientation_options : [""],
+        discordGuildId: data.discord_guild_id ?? "",
+        discordVoiceChannelId: data.discord_voice_channel_id ?? "",
+        presentationTime: data.presentation_time ?? "",
+        presentationDurationMinutes:
+          data.presentation_duration_minutes != null ? String(data.presentation_duration_minutes) : "",
       });
     });
   };
@@ -165,6 +182,12 @@ export default function Admin() {
         application_opens_at: settingsForm.opensAt || null,
         application_closes_at: settingsForm.closesAt || null,
         orientation_options: settingsForm.options.map((o) => o.trim()).filter(Boolean),
+        discord_guild_id: settingsForm.discordGuildId.trim() || null,
+        discord_voice_channel_id: settingsForm.discordVoiceChannelId.trim() || null,
+        presentation_time: settingsForm.presentationTime || null,
+        presentation_duration_minutes: settingsForm.presentationDurationMinutes
+          ? Number(settingsForm.presentationDurationMinutes)
+          : null,
       });
       setSettingsSaved(true);
       loadSettings();
@@ -333,6 +356,48 @@ export default function Admin() {
           <button type="button" onClick={addOption}>
             옵션 추가
           </button>
+        </div>
+
+        <div className="settings-group">
+          <h3>디스코드 발표 이벤트</h3>
+          <p className="note">
+            학생이 발표를 신청하면 아래 정보로 디스코드 서버 이벤트가 자동 생성됩니다. 비워두면 서버의 기본값(.env)을
+            그대로 사용합니다. 봇 토큰은 보안상 여기서 설정할 수 없고 서버 `.env`에만 존재합니다.
+          </p>
+          <label>
+            길드(서버) ID
+            <input
+              value={settingsForm.discordGuildId}
+              onChange={(e) => setSettingsForm((f) => ({ ...f, discordGuildId: e.target.value }))}
+              placeholder="예: 123456789012345678"
+            />
+          </label>
+          <label>
+            음성채널 ID
+            <input
+              value={settingsForm.discordVoiceChannelId}
+              onChange={(e) => setSettingsForm((f) => ({ ...f, discordVoiceChannelId: e.target.value }))}
+              placeholder="예: 123456789012345678"
+            />
+          </label>
+          <label>
+            발표 시작 시각
+            <input
+              type="time"
+              value={settingsForm.presentationTime}
+              onChange={(e) => setSettingsForm((f) => ({ ...f, presentationTime: e.target.value }))}
+            />
+          </label>
+          <label>
+            발표 진행 시간(분)
+            <input
+              type="number"
+              min={1}
+              value={settingsForm.presentationDurationMinutes}
+              onChange={(e) => setSettingsForm((f) => ({ ...f, presentationDurationMinutes: e.target.value }))}
+              placeholder="예: 60"
+            />
+          </label>
         </div>
 
         <button type="submit" disabled={settingsSaving}>

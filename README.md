@@ -104,6 +104,8 @@ curl -I https://study2026.bssm.dev
 6. 발표할 음성채널 우클릭 → **ID 복사** → `DISCORD_VOICE_CHANNEL_ID`
 7. `.env`에 `DISCORD_BOT_TOKEN` / `DISCORD_GUILD_ID` / `DISCORD_VOICE_CHANNEL_ID`와, 실제 발표 시작 시각으로 `PRESENTATION_TIME`(예: `21:00`) 채우기
 
+토큰(`DISCORD_BOT_TOKEN`)은 비밀값이라 `.env`에서만 관리합니다. 길드 ID / 음성채널 ID / 발표 시작 시각 / 진행 시간은 `.env` 값이 최초 기본값으로 쓰이고, 이후엔 **`/admin` → 설정 → 디스코드 발표 이벤트**에서 로그인 없이 서버 접속·재배포 없이 관리자가 직접 바꿀 수 있습니다 (예: 학기 중 발표 시간이나 음성채널이 바뀌는 경우).
+
 세 값(토큰/길드/채널) 중 하나라도 비어있으면 이벤트 등록 없이 조용히 스킵되고 나머지 기능엔 영향 없습니다. 세션이 "취소" 상태로 바뀌면 등록해둔 이벤트도 자동으로 삭제됩니다.
 
 ## 프로젝트 구조

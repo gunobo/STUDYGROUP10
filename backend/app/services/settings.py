@@ -13,6 +13,10 @@ def get_settings(db: Session) -> StudySettings:
             application_opens_at=env_settings.application_opens_at,
             application_closes_at=env_settings.application_closes_at,
             orientation_options=[],
+            discord_guild_id=env_settings.discord_guild_id or None,
+            discord_voice_channel_id=env_settings.discord_voice_channel_id or None,
+            presentation_time=env_settings.presentation_time or None,
+            presentation_duration_minutes=env_settings.presentation_duration_minutes or None,
         )
         db.add(row)
         db.commit()

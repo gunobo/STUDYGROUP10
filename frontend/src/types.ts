@@ -85,6 +85,10 @@ export interface StudySettings {
   application_closes_at: string | null;
   is_open: boolean;
   orientation_options: string[];
+  discord_guild_id: string | null;
+  discord_voice_channel_id: string | null;
+  presentation_time: string | null;
+  presentation_duration_minutes: number | null;
 }
 
 export interface UserDetail extends User {

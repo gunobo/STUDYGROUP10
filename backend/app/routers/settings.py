@@ -15,6 +15,10 @@ def _to_read(row) -> SettingsRead:
         application_closes_at=row.application_closes_at,
         is_open=is_application_open(row),
         orientation_options=row.orientation_options or [],
+        discord_guild_id=row.discord_guild_id,
+        discord_voice_channel_id=row.discord_voice_channel_id,
+        presentation_time=row.presentation_time,
+        presentation_duration_minutes=row.presentation_duration_minutes,
     )
 
 

@@ -78,7 +78,7 @@ async def update_session(
         setattr(session, field, value)
 
     if payload.status == SessionStatus.canceled and session.discord_event_id:
-        await delete_scheduled_event(session.discord_event_id)
+        await delete_scheduled_event(db, session.discord_event_id)
         session.discord_event_id = None
 
     db.commit()
@@ -125,7 +125,7 @@ async def claim_session(
         f"🎤 **{user.name}**님이 **{session.scheduled_date}** 발표를 신청했습니다!\n주제: {session.topic}"
     )
 
-    event_id = await create_scheduled_event(session.scheduled_date, session.topic, user.name)
+    event_id = await create_scheduled_event(db, session.scheduled_date, session.topic, user.name)
     if event_id:
         session.discord_event_id = event_id
         db.commit()
