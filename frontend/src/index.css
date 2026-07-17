@@ -1,0 +1,24 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Apple SD Gothic Neo", sans-serif;
+  background: #f7f7f8;
+  color: #1a1a1a;
+}
+
+.app__nav {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+  background: #fff;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.app__main {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
