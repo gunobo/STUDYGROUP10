@@ -1,4 +1,10 @@
-export default function FineTable({ fines }) {
+import type { Fine } from "../types";
+
+interface FineTableProps {
+  fines: Fine[];
+}
+
+export default function FineTable({ fines }: FineTableProps) {
   return (
     <div className="table-wrap">
       <table className="fine-table">

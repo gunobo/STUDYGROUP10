@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import client from "../api/client";
 import ScheduleCard from "../components/ScheduleCard";
+import type { StudySession } from "../types";
 
 const FINE_RULES = [
   { situation: "발표 당일 무단 불참", amount: "500원" },
@@ -12,10 +13,10 @@ const FINE_RULES = [
 ];
 
 export default function Home() {
-  const [nextSession, setNextSession] = useState(null);
+  const [nextSession, setNextSession] = useState<StudySession | null>(null);
 
   useEffect(() => {
-    client.get("/sessions", { params: { status_: "예정" } }).then(({ data }) => {
+    client.get<StudySession[]>("/sessions", { params: { status_: "예정" } }).then(({ data }) => {
       setNextSession(data[0] ?? null);
     });
   }, []);

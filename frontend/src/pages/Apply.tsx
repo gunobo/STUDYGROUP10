@@ -1,7 +1,20 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 import client from "../api/client";
+import type { StudySettings } from "../types";
 
-const initialForm = {
+interface ApplyForm {
+  student_id: string;
+  name: string;
+  phone: string;
+  topics: string[];
+  available_time: string;
+  privacy_consent: boolean;
+  rules_agreed: "" | "예" | "아니오";
+}
+
+type TextField = "student_id" | "name" | "phone" | "available_time" | "rules_agreed";
+
+const initialForm: ApplyForm = {
   student_id: "",
   name: "",
   phone: "",
@@ -11,7 +24,7 @@ const initialForm = {
   rules_agreed: "",
 };
 
-const formatDate = (value) =>
+const formatDate = (value: string | null) =>
   value
     ? new Date(value).toLocaleString("ko-KR", {
         month: "long",
@@ -22,18 +35,19 @@ const formatDate = (value) =>
     : null;
 
 export default function Apply() {
-  const [form, setForm] = useState(initialForm);
+  const [form, setForm] = useState<ApplyForm>(initialForm);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
-  const [settings, setSettings] = useState(null);
+  const [settings, setSettings] = useState<StudySettings | null>(null);
 
   useEffect(() => {
-    client.get("/settings").then(({ data }) => setSettings(data));
+    client.get<StudySettings>("/settings").then(({ data }) => setSettings(data));
   }, []);
 
-  const update = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
+  const update = (field: TextField) => (e: ChangeEvent<HTMLInputElement>) =>
+    setForm((f) => ({ ...f, [field]: e.target.value }));
 
-  const updateTopic = (index) => (e) => {
+  const updateTopic = (index: number) => (e: ChangeEvent<HTMLInputElement>) => {
     setForm((f) => {
       const topics = [...f.topics];
       topics[index] = e.target.value;
@@ -43,7 +57,7 @@ export default function Apply() {
 
   const addTopic = () => setForm((f) => ({ ...f, topics: [...f.topics, ""] }));
 
-  const removeTopic = (index) =>
+  const removeTopic = (index: number) =>
     setForm((f) => ({ ...f, topics: f.topics.filter((_, i) => i !== index) }));
 
   const validTopics = form.topics.map((t) => t.trim()).filter(Boolean);
@@ -56,7 +70,7 @@ export default function Apply() {
     form.privacy_consent &&
     form.rules_agreed === "예";
 
-  const submit = async (e) => {
+  const submit = async (e: FormEvent) => {
     e.preventDefault();
     setError("");
     try {
@@ -70,7 +84,7 @@ export default function Apply() {
         rules_agreed: form.rules_agreed === "예",
       });
       setSubmitted(true);
-    } catch (err) {
+    } catch (err: any) {
       setError(err.response?.data?.detail ?? "신청 접수에 실패했습니다. 잠시 후 다시 시도해주세요.");
     }
   };

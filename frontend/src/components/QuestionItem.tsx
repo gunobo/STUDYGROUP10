@@ -1,4 +1,10 @@
-export default function QuestionItem({ question }) {
+import type { Question } from "../types";
+
+interface QuestionItemProps {
+  question: Question;
+}
+
+export default function QuestionItem({ question }: QuestionItemProps) {
   return (
     <div className="question-item">
       <p>{question.content}</p>

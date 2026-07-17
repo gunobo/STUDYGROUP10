@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import client from "../api/client";
+import type { Question, StudySession } from "../types";
 import QuestionItem from "./QuestionItem";
 
 const TABS = [
@@ -9,19 +10,19 @@ const TABS = [
   { key: "demo_note", label: "시연/실습" },
   { key: "questions", label: "Q&A" },
   { key: "quiz_json", label: "퀴즈/정리" },
-];
+] as const;
 
-function QATab({ sessionId }) {
-  const [questions, setQuestions] = useState([]);
+function QATab({ sessionId }: { sessionId: number }) {
+  const [questions, setQuestions] = useState<Question[]>([]);
   const [content, setContent] = useState("");
 
   const load = () => {
-    client.get(`/sessions/${sessionId}/questions`).then(({ data }) => setQuestions(data));
+    client.get<Question[]>(`/sessions/${sessionId}/questions`).then(({ data }) => setQuestions(data));
   };
 
   useEffect(load, [sessionId]);
 
-  const submit = async (e) => {
+  const submit = async (e: FormEvent) => {
     e.preventDefault();
     if (!content.trim()) return;
     await client.post(`/sessions/${sessionId}/questions`, { content });
@@ -53,8 +54,12 @@ function QATab({ sessionId }) {
   );
 }
 
-export default function SessionTabs({ session }) {
-  const [active, setActive] = useState(TABS[0].key);
+interface SessionTabsProps {
+  session: StudySession;
+}
+
+export default function SessionTabs({ session }: SessionTabsProps) {
+  const [active, setActive] = useState<(typeof TABS)[number]["key"]>(TABS[0].key);
 
   return (
     <div className="session-tabs">
@@ -70,7 +75,13 @@ export default function SessionTabs({ session }) {
         ))}
       </div>
       <div className="session-tabs__content">
-        {active === "questions" ? <QATab sessionId={session.id} /> : (session?.[active] ?? "")}
+        {active === "questions" ? (
+          <QATab sessionId={session.id} />
+        ) : typeof session[active] === "string" ? (
+          session[active]
+        ) : (
+          ""
+        )}
       </div>
     </div>
   );

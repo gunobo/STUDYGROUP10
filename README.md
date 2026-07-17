@@ -4,7 +4,7 @@
 전체 명세는 [.claude/claude.md](.claude/claude.md) 참고.
 
 ## 스택
-- 프론트엔드: React (Vite)
+- 프론트엔드: React + TypeScript (Vite)
 - 백엔드: FastAPI
 - DB: MySQL
 - 인증: Google OAuth 2.0 (학교 구글 계정 화이트리스트)
@@ -33,7 +33,9 @@ npm install
 npm run dev
 ```
 
-프론트는 `/api` 요청을 `vite.config.js`의 프록시를 통해 `localhost:8000`으로 전달합니다.
+프론트는 `/api` 요청을 `vite.config.ts`의 프록시를 통해 `localhost:8000`으로 전달합니다.
+
+타입만 체크하려면 `npm run typecheck` (빌드는 `tsc -b && vite build`로 타입 에러가 있으면 실패합니다).
 
 ## Docker Compose로 전체 실행
 ```bash
@@ -83,7 +85,7 @@ curl -I https://study2026.bssm.dev
 ## 프로젝트 구조
 ```
 backend/   FastAPI 앱 (app/models, schemas, routers)
-frontend/  React (Vite) 앱 (src/pages, components, api, store)
+frontend/  React + TypeScript (Vite) 앱 (src/pages, components, api, store, types.ts)
 ```
 
 체크리스트는 [TODO.md](TODO.md) 참고.

@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import client from "../api/client";
+import type { User } from "../types";
 
 export default function Members() {
-  const [users, setUsers] = useState([]);
+  const [users, setUsers] = useState<User[]>([]);
 
   useEffect(() => {
-    client.get("/users").then(({ data }) => setUsers(data));
+    client.get<User[]>("/users").then(({ data }) => setUsers(data));
   }, []);
 
   return (

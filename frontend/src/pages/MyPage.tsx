@@ -1,14 +1,15 @@
 import { useEffect, useState } from "react";
 import client from "../api/client";
 import { useAuthStore } from "../store/useAuthStore";
+import type { StudySession, UserDetail } from "../types";
 
 export default function MyPage() {
   const { user } = useAuthStore();
-  const [sessions, setSessions] = useState([]);
+  const [sessions, setSessions] = useState<StudySession[]>([]);
 
   useEffect(() => {
     if (!user) return;
-    client.get(`/users/${user.id}`).then(({ data }) => setSessions(data.sessions));
+    client.get<UserDetail>(`/users/${user.id}`).then(({ data }) => setSessions(data.sessions));
   }, [user]);
 
   return (

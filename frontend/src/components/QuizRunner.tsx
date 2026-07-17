@@ -1,6 +1,15 @@
 import { useState } from "react";
 
-export default function QuizRunner({ quiz }) {
+interface QuizQuestion {
+  question: string;
+  options?: string[];
+}
+
+interface QuizRunnerProps {
+  quiz: { questions?: QuizQuestion[] } | null | undefined;
+}
+
+export default function QuizRunner({ quiz }: QuizRunnerProps) {
   const questions = quiz?.questions ?? [];
   const [index, setIndex] = useState(0);
 
@@ -18,10 +27,7 @@ export default function QuizRunner({ quiz }) {
         <button disabled={index === 0} onClick={() => setIndex((i) => i - 1)}>
           이전
         </button>
-        <button
-          disabled={index === questions.length - 1}
-          onClick={() => setIndex((i) => i + 1)}
-        >
+        <button disabled={index === questions.length - 1} onClick={() => setIndex((i) => i + 1)}>
           다음
         </button>
       </div>

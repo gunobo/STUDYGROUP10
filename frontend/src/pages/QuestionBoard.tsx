@@ -1,20 +1,21 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useParams } from "react-router-dom";
 import client from "../api/client";
 import QuestionItem from "../components/QuestionItem";
+import type { Question } from "../types";
 
 export default function QuestionBoard() {
-  const { id } = useParams();
-  const [questions, setQuestions] = useState([]);
+  const { id } = useParams<{ id: string }>();
+  const [questions, setQuestions] = useState<Question[]>([]);
   const [content, setContent] = useState("");
 
   const load = () => {
-    client.get(`/sessions/${id}/questions`).then(({ data }) => setQuestions(data));
+    client.get<Question[]>(`/sessions/${id}/questions`).then(({ data }) => setQuestions(data));
   };
 
   useEffect(load, [id]);
 
-  const submit = async (e) => {
+  const submit = async (e: FormEvent) => {
     e.preventDefault();
     if (!content.trim()) return;
     await client.post(`/sessions/${id}/questions`, { content });

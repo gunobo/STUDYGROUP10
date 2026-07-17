@@ -2,13 +2,14 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import client from "../api/client";
 import SessionTabs from "../components/SessionTabs";
+import type { StudySession } from "../types";
 
 export default function SessionDetail() {
-  const { id } = useParams();
-  const [session, setSession] = useState(null);
+  const { id } = useParams<{ id: string }>();
+  const [session, setSession] = useState<StudySession | null>(null);
 
   useEffect(() => {
-    client.get(`/sessions/${id}`).then(({ data }) => setSession(data));
+    client.get<StudySession>(`/sessions/${id}`).then(({ data }) => setSession(data));
   }, [id]);
 
   if (!session) return <p>불러오는 중...</p>;

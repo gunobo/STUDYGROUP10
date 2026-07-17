@@ -1,34 +1,41 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 import client from "../api/client";
 import { useAuthStore } from "../store/useAuthStore";
+import type { Application, Fine, StudySession, StudySettings, User, UserRole } from "../types";
 
-const toDatetimeLocal = (iso) => (iso ? iso.slice(0, 16) : "");
+interface SettingsForm {
+  opensAt: string;
+  closesAt: string;
+  options: string[];
+}
+
+const toDatetimeLocal = (iso: string | null) => (iso ? iso.slice(0, 16) : "");
 
 export default function Admin() {
   const currentUser = useAuthStore((state) => state.user);
-  const [sessions, setSessions] = useState([]);
-  const [fines, setFines] = useState([]);
-  const [applications, setApplications] = useState([]);
-  const [users, setUsers] = useState([]);
-  const [approvingId, setApprovingId] = useState(null);
+  const [sessions, setSessions] = useState<StudySession[]>([]);
+  const [fines, setFines] = useState<Fine[]>([]);
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [approvingId, setApprovingId] = useState<number | null>(null);
   const [orientationAt, setOrientationAt] = useState("");
   const [orientationPlace, setOrientationPlace] = useState("");
   const [approveError, setApproveError] = useState("");
 
-  const [settingsForm, setSettingsForm] = useState({ opensAt: "", closesAt: "", options: [""] });
+  const [settingsForm, setSettingsForm] = useState<SettingsForm>({ opensAt: "", closesAt: "", options: [""] });
   const [settingsSaving, setSettingsSaving] = useState(false);
   const [settingsSaved, setSettingsSaved] = useState(false);
 
   const loadApplications = () => {
-    client.get("/applications").then(({ data }) => setApplications(data));
+    client.get<Application[]>("/applications").then(({ data }) => setApplications(data));
   };
 
   const loadUsers = () => {
-    client.get("/users").then(({ data }) => setUsers(data));
+    client.get<User[]>("/users").then(({ data }) => setUsers(data));
   };
 
   const loadSettings = () => {
-    client.get("/settings").then(({ data }) => {
+    client.get<StudySettings>("/settings").then(({ data }) => {
       setSettingsForm({
         opensAt: toDatetimeLocal(data.application_opens_at),
         closesAt: toDatetimeLocal(data.application_closes_at),
@@ -38,19 +45,19 @@ export default function Admin() {
   };
 
   useEffect(() => {
-    client.get("/sessions").then(({ data }) => setSessions(data));
-    client.get("/fines").then(({ data }) => setFines(data));
+    client.get<StudySession[]>("/sessions").then(({ data }) => setSessions(data));
+    client.get<Fine[]>("/fines").then(({ data }) => setFines(data));
     loadApplications();
     loadUsers();
     loadSettings();
   }, []);
 
-  const changeRole = async (userId, role) => {
+  const changeRole = async (userId: number, role: UserRole) => {
     await client.patch(`/users/${userId}`, { role });
     loadUsers();
   };
 
-  const updateOption = (index) => (e) => {
+  const updateOption = (index: number) => (e: ChangeEvent<HTMLInputElement>) => {
     setSettingsForm((f) => {
       const options = [...f.options];
       options[index] = e.target.value;
@@ -60,10 +67,10 @@ export default function Admin() {
 
   const addOption = () => setSettingsForm((f) => ({ ...f, options: [...f.options, ""] }));
 
-  const removeOption = (index) =>
+  const removeOption = (index: number) =>
     setSettingsForm((f) => ({ ...f, options: f.options.filter((_, i) => i !== index) }));
 
-  const saveSettings = async (e) => {
+  const saveSettings = async (e: FormEvent) => {
     e.preventDefault();
     setSettingsSaving(true);
     setSettingsSaved(false);
@@ -80,14 +87,14 @@ export default function Admin() {
     }
   };
 
-  const startApprove = (application) => {
+  const startApprove = (application: Application) => {
     setApprovingId(application.id);
     setOrientationAt("");
     setOrientationPlace("");
     setApproveError("");
   };
 
-  const confirmApprove = async (id) => {
+  const confirmApprove = async (id: number) => {
     setApproveError("");
     try {
       await client.patch(`/applications/${id}`, {
@@ -97,13 +104,13 @@ export default function Admin() {
       });
       setApprovingId(null);
       loadApplications();
-    } catch (err) {
+    } catch (err: any) {
       setApproveError(err.response?.data?.detail ?? "승인 처리 중 오류가 발생했습니다.");
       loadApplications();
     }
   };
 
-  const reject = async (id) => {
+  const reject = async (id: number) => {
     await client.patch(`/applications/${id}`, { status: "거절" });
     loadApplications();
   };
@@ -225,7 +232,7 @@ export default function Admin() {
               className="role-select"
               value={u.role}
               disabled={u.id === currentUser?.id}
-              onChange={(e) => changeRole(u.id, e.target.value)}
+              onChange={(e) => changeRole(u.id, e.target.value as UserRole)}
             >
               <option value="member">일반</option>
               <option value="admin">관리자</option>
