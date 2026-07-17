@@ -35,6 +35,9 @@ class Settings(BaseSettings):
     application_opens_at: datetime | None = None
     application_closes_at: datetime | None = None
 
+    # 디스코드 웹훅 (일정 오픈/발표 신청 알림, 비워두면 알림 안 보냄)
+    discord_webhook_url: str = ""
+
     @property
     def allowed_domains_list(self) -> list[str]:
         return [d.strip() for d in self.allowed_email_domains.split(",") if d.strip()]

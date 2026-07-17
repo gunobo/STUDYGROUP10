@@ -9,6 +9,7 @@ from app.models.application import Application, ApplicationStatus
 from app.models.session import Session, SessionStatus
 from app.models.user import User
 from app.schemas.session import SessionClaim, SessionCreate, SessionRead, SessionUpdate
+from app.senders.discord import send_discord_message
 
 router = APIRouter(prefix="/api/sessions", tags=["sessions"])
 
@@ -42,11 +43,15 @@ def list_open_sessions(db: DBSession = Depends(get_db)):
 
 
 @router.post("", response_model=SessionRead, status_code=status.HTTP_201_CREATED)
-def create_session(payload: SessionCreate, db: DBSession = Depends(get_db), _=Depends(require_admin)):
+async def create_session(payload: SessionCreate, db: DBSession = Depends(get_db), _=Depends(require_admin)):
     session = Session(**payload.model_dump())
     db.add(session)
     db.commit()
     db.refresh(session)
+
+    if session.presenter_id is None:
+        await send_discord_message(f"📅 새로운 발표 날짜가 열렸습니다: **{session.scheduled_date}** — 마이페이지에서 신청하세요!")
+
     return session
 
 
@@ -85,7 +90,7 @@ def delete_session(session_id: int, db: DBSession = Depends(get_db), _=Depends(r
 
 
 @router.post("/{session_id}/claim", response_model=SessionRead)
-def claim_session(
+async def claim_session(
     session_id: int,
     payload: SessionClaim,
     db: DBSession = Depends(get_db),
@@ -109,4 +114,9 @@ def claim_session(
     session.topic = payload.topic
     db.commit()
     db.refresh(session)
+
+    await send_discord_message(
+        f"🎤 **{user.name}**님이 **{session.scheduled_date}** 발표를 신청했습니다!\n주제: {session.topic}"
+    )
+
     return session
