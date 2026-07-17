@@ -45,6 +45,16 @@ def create_application(
     return application
 
 
+@router.get("/mine", response_model=ApplicationRead | None)
+def get_my_application(db: DBSession = Depends(get_db), user: User = Depends(get_current_user)):
+    return (
+        db.query(Application)
+        .filter(Application.user_id == user.id)
+        .order_by(Application.created_at.desc())
+        .first()
+    )
+
+
 @router.get("", response_model=list[ApplicationRead])
 def list_applications(
     skip: int = Query(0, ge=0),

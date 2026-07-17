@@ -480,6 +480,12 @@ section > ul > li > a {
   font-weight: 700;
 }
 
+.schedule-card__open {
+  color: var(--color-text-muted);
+  font-weight: 500;
+  font-style: italic;
+}
+
 .schedule-card__status {
   font-size: 0.75rem;
   font-weight: 700;
@@ -686,6 +692,43 @@ section > ul > li > a {
 
 .fine-table tbody tr:hover {
   background: var(--color-bg);
+}
+
+/* ---------- application card (admin) ---------- */
+
+.application-card__header {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  font-weight: 700;
+}
+
+.application-card__meta {
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+}
+
+.application-card__motivation {
+  color: var(--color-text);
+  line-height: 1.6;
+}
+
+.application-card__topics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.application-card__row {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.application-card__actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
 }
 
 /* ---------- approve form (admin) ---------- */

@@ -21,10 +21,7 @@ interface SettingsForm {
 }
 
 interface SessionForm {
-  presenter_id: string;
-  topic: string;
   scheduled_date: string;
-  material_url: string;
 }
 
 interface EditSessionForm {
@@ -65,12 +62,7 @@ export default function Admin() {
   const [settingsSaving, setSettingsSaving] = useState(false);
   const [settingsSaved, setSettingsSaved] = useState(false);
 
-  const [sessionForm, setSessionForm] = useState<SessionForm>({
-    presenter_id: "",
-    topic: "",
-    scheduled_date: "",
-    material_url: "",
-  });
+  const [sessionForm, setSessionForm] = useState<SessionForm>({ scheduled_date: "" });
   const [sessionCreating, setSessionCreating] = useState(false);
   const [sessionError, setSessionError] = useState("");
 
@@ -212,22 +204,17 @@ export default function Admin() {
   const createSession = async (e: FormEvent) => {
     e.preventDefault();
     setSessionError("");
-    if (!sessionForm.presenter_id || !sessionForm.topic.trim() || !sessionForm.scheduled_date) {
-      setSessionError("발표자/주제/날짜를 모두 입력하세요.");
+    if (!sessionForm.scheduled_date) {
+      setSessionError("날짜를 입력하세요.");
       return;
     }
     setSessionCreating(true);
     try {
-      await client.post("/sessions", {
-        presenter_id: Number(sessionForm.presenter_id),
-        topic: sessionForm.topic.trim(),
-        scheduled_date: sessionForm.scheduled_date,
-        material_url: sessionForm.material_url.trim() || null,
-      });
-      setSessionForm({ presenter_id: "", topic: "", scheduled_date: "", material_url: "" });
+      await client.post("/sessions", { scheduled_date: sessionForm.scheduled_date });
+      setSessionForm({ scheduled_date: "" });
       loadSessions();
     } catch (err: any) {
-      setSessionError(err.response?.data?.detail ?? "세션 생성에 실패했습니다.");
+      setSessionError(err.response?.data?.detail ?? "날짜 추가에 실패했습니다.");
     } finally {
       setSessionCreating(false);
     }
@@ -357,29 +344,40 @@ export default function Admin() {
       <h2>참가 신청 관리</h2>
       <ul>
         {applications.map((a) => (
-          <li key={a.id}>
-            <strong>{a.name}</strong> ({a.student_id} / {a.user.email} / {a.phone}){" "}
-            <span
-              className={`badge ${
-                a.status === "승인" ? "badge--approved" : a.status === "거절" ? "badge--rejected" : "badge--pending"
-              }`}
-            >
-              {a.status}
-            </span>
-            <p>분야: {a.topics.join(", ")}</p>
-            <p>설명회 참여 가능 시간: {a.available_time}</p>
+          <li key={a.id} className="application-card">
+            <div className="application-card__header">
+              <span>{a.name}</span>
+              <span
+                className={`badge ${
+                  a.status === "승인" ? "badge--approved" : a.status === "거절" ? "badge--rejected" : "badge--pending"
+                }`}
+              >
+                {a.status}
+              </span>
+            </div>
+            <div className="application-card__meta">
+              학번 {a.student_id} · {a.user.email} · {a.phone}
+            </div>
+            <div className="application-card__topics">
+              {a.topics.map((topic) => (
+                <span key={topic} className="chip">
+                  {topic}
+                </span>
+              ))}
+            </div>
+            <div className="application-card__row">설명회 참여 가능 시간: {a.available_time}</div>
             {a.status === "승인" && (
-              <p>
+              <div className="application-card__row">
                 설명회: {a.orientation_at ? new Date(a.orientation_at).toLocaleString() : "미정"} /{" "}
                 {a.orientation_place || "미정"} — 문자 발송 {a.sms_sent ? "완료" : "실패/미발송"}
-              </p>
+              </div>
             )}
 
             {a.status === "대기" && approvingId !== a.id && (
-              <>
+              <div className="application-card__actions">
                 <button onClick={() => startApprove(a)}>승인</button>
                 <button onClick={() => reject(a.id)}>거절</button>
-              </>
+              </div>
             )}
 
             {approvingId === a.id && (
@@ -432,29 +430,11 @@ export default function Admin() {
       <p className="note">본인 역할은 변경할 수 없습니다.</p>
 
       <h2>일정 관리</h2>
+      <p className="note">
+        날짜만 열어두면 참가 승인된 학생이 마이페이지에서 그 날짜에 발표를 신청합니다. 시간은
+        고정이라 별도 입력이 없습니다.
+      </p>
       <form onSubmit={createSession}>
-        <label>
-          발표자
-          <select
-            value={sessionForm.presenter_id}
-            onChange={(e) => setSessionForm((f) => ({ ...f, presenter_id: e.target.value }))}
-          >
-            <option value="">선택</option>
-            {users.map((u) => (
-              <option key={u.id} value={u.id}>
-                {u.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          주제
-          <input
-            value={sessionForm.topic}
-            onChange={(e) => setSessionForm((f) => ({ ...f, topic: e.target.value }))}
-            placeholder="예: 리눅스 기초"
-          />
-        </label>
         <label>
           발표 날짜
           <input
@@ -463,24 +443,18 @@ export default function Admin() {
             onChange={(e) => setSessionForm((f) => ({ ...f, scheduled_date: e.target.value }))}
           />
         </label>
-        <label>
-          자료 링크 (선택)
-          <input
-            value={sessionForm.material_url}
-            onChange={(e) => setSessionForm((f) => ({ ...f, material_url: e.target.value }))}
-            placeholder="https://..."
-          />
-        </label>
         {sessionError && <p className="apply__error">{sessionError}</p>}
         <button type="submit" disabled={sessionCreating}>
-          {sessionCreating ? "추가 중..." : "세션 추가"}
+          {sessionCreating ? "여는 중..." : "날짜 열기"}
         </button>
       </form>
 
       <ul>
         {sessions.map((s) => (
           <li key={s.id}>
-            <strong>{s.scheduled_date}</strong> — {s.topic} <span className="badge">{s.status}</span>
+            <strong>{s.scheduled_date}</strong> —{" "}
+            {s.topic ?? <span className="badge badge--pending">미배정 (신청 가능)</span>}{" "}
+            <span className="badge">{s.status}</span>
             {editingSessionId !== s.id && <button onClick={() => startEditSession(s)}>수정</button>}
 
             {editingSessionId === s.id && (
@@ -577,7 +551,7 @@ export default function Admin() {
             <option value="">없음</option>
             {sessions.map((s) => (
               <option key={s.id} value={s.id}>
-                {s.scheduled_date} — {s.topic}
+                {s.scheduled_date} — {s.topic ?? "미배정"}
               </option>
             ))}
           </select>

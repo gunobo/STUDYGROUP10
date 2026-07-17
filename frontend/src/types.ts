@@ -13,8 +13,8 @@ export type SessionStatus = "예정" | "완료" | "취소" | "연기";
 
 export interface StudySession {
   id: number;
-  presenter_id: number;
-  topic: string;
+  presenter_id: number | null;
+  topic: string | null;
   scheduled_date: string;
   status: SessionStatus;
   material_url: string | null;
