@@ -6,8 +6,8 @@
 - [x] study2026 전용 Cloudflare Tunnel 생성 및 연결 — `study2026.bssm.dev` 정상 서비스 확인 (HTTP 200, `/api/health` OK)
 - [x] `docker-compose.yml`에 `cloudflared` 서비스 포함, 다른 프로젝트(giftlink/meistertrack/jeminmail 등)와 안 겹치는 포트로 고정 (frontend 5103 / backend 8005 / mysql 3313)
 - [x] 파이에서 `docker compose up -d --build` 통합 기동 확인
-- [x] Alembic 마이그레이션 도입 — `Base.metadata.create_all` 제거, `backend/entrypoint.sh`가 컨테이너 시작 시 `alembic upgrade head`를 자동 실행. 앞으로 모델 바꾸면 `alembic revision --autogenerate -m "설명"` 후 커밋만 하면 됨 (DB 리셋 불필요)
-- [ ] **지금 당장**: 파이의 `applications` 테이블이 `student_id`/`topics`/`user_id` 등 새 컬럼 없이 예전 스키마(email/motivation)로 남아있어서 관련 API가 500을 냄. 실 신청 데이터 없는 것 확인했으니 `docker compose down -v && git pull && docker compose up -d --build`로 볼륨째 리셋 — 이후엔 Alembic이 관리하니 이런 리셋 다시 필요 없음
+- [x] Alembic 마이그레이션 도입 — `Base.metadata.create_all` 제거, `backend/entrypoint.sh`가 컨테이너 시작 시 `alembic upgrade head`를 자동 실행
+- [ ] **지금 당장**: 파이의 `applications` 테이블이 예전 스키마로 남아있어서 500이 났던 문제 — `docker compose down -v && git pull && docker compose up -d --build`로 볼륨 리셋 필요 (실 신청 데이터 없는 것 확인됨). 이후엔 Alembic이 관리하니 다시는 리셋 불필요
 - [ ] Google Cloud Console에서 실제 OAuth 2.0 클라이언트 발급 + 리디렉션 URI(`https://study2026.bssm.dev/api/auth/google/callback`) 등록
 - [ ] `.env`에 `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` 실값 채우기 (JWT_SECRET은 이미 생성해서 채움)
 - [ ] `ALLOWED_EMAIL_DOMAINS`를 실제 학교 구글 워크스페이스 도메인으로 교체 확인
@@ -18,53 +18,52 @@
 - [x] Google OAuth 로그인/콜백/me/logout 라우터
 - [x] 도메인 화이트리스트 + admin 이메일 화이트리스트(`startea0716@gmail.com`) 로직
 - [x] 관리자가 다른 참가자의 role(member/admin)을 `/admin`에서 직접 변경 가능 (본인 역할 변경은 막아둠)
+- [x] 로그인 상태에 따른 네비게이션 분기 — 헤더에 로그인/로그아웃 버튼, 비로그인 시 "마이페이지"/"관리자" 링크 숨김, 관리자 아니면 "관리자" 링크 숨김
 - [ ] 실제 Google 클라이언트로 로그인 플로우 end-to-end 테스트 (0번 OAuth 클라이언트 발급 후 진행)
 - [ ] 미허용 도메인 로그인 시 403 에러 페이지/안내 UI (현재 API 403만 응답)
 - [ ] JWT 쿠키 `secure=True` 적용 여부 확인 (배포 도메인이 https이므로 켜는 게 맞음)
-- [ ] 로그인 상태에 따른 네비게이션 분기 (로그인/로그아웃 버튼 노출, 관리자 아닌데 "관리자" 메뉴 계속 보이는 문제 — 클릭하면 AuthGuard가 막긴 하지만 UI상 숨기는 게 자연스러움)
 
 ## 2. 데이터 모델 / 백엔드
 - [x] users, sessions, questions, feedbacks, fines, attendances 테이블 모델
 - [x] 세션/질문/피드백/벌금/유저 기본 CRUD 라우터
-- [x] applications 테이블 + API — 로그인 필요, 필드: 학번/이름/전화번호/공부할 분야(2개 이상)/설명회 참여 가능 시간/개인정보 수집 동의/스터디 규칙 동의. `user_id`로 로그인 계정과 연결, 동일 유저 중복 신청(거절 제외) 차단
-- [x] `study_settings` 테이블(싱글톤) + `GET/PATCH /api/settings` — 참가 신청 기간(시작/마감)과 설명회 참여 가능 시간 옵션 목록을 관리자가 `/admin`에서 직접 수정
-- [x] SolAPI SMS 연동 — 관리자가 승인하며 설명회 일시/장소를 입력하면 신청자 휴대폰으로 안내 문자 발송
+- [x] applications 테이블 + API — 로그인 필요, 필드: 학번/이름/전화번호/공부할 분야(2개 이상)/설명회 참여 가능 시간/개인정보 수집 동의/스터디 규칙 동의
+- [x] `study_settings` 테이블(싱글톤) + `GET/PATCH /api/settings` — 참가 신청 기간과 설명회 시간 옵션을 관리자가 `/admin`에서 직접 수정
+- [x] SolAPI SMS 연동 — 승인 시 신청자 휴대폰으로 설명회 안내 문자 발송
 - [x] Alembic 마이그레이션 (0번 항목 참고)
 - [x] attendances API 라우터 — `GET/POST /api/sessions/{id}/attendances`(생성은 admin), `PATCH /api/attendances/{id}`(admin)
-- [x] 질문 답변 로직: 질문 생성 시 해당 세션 이후 가장 빠른 다음 세션을 찾아 `resolved_before_session_id`에 자동 연결 ("다음 발표 전까지 공유" 마감 기준)
-- [x] `PATCH /api/questions/{id}`에 관리자 권한 체크 추가 (이전엔 아무나 답변/해결 처리 가능했던 구멍)
-- [x] 페이지네이션 — fines/applications/users/questions(unresolved) 목록에 `skip`/`limit` 쿼리 파라미터 추가
-- [x] 예외 처리 통일 — 전역 핸들러가 처리 안 된 예외를 `{"detail": "서버 오류가 발생했습니다"}` 500 JSON으로 통일 응답 (서버 로그엔 스택트레이스 남김)
-- [ ] applications 승인 시 실제 로그인 권한과 자동 연결되는 로직은 없음 (승인해도 여전히 학교 구글 계정이면 누구나 로그인 가능 — 신청 승인을 로그인 게이트로 쓸 건지 운영 방식 확정 필요)
-- [ ] 미해결 질문 대시보드 노출 (`GET /api/questions/unresolved` API는 있지만 프론트에서 아직 안 씀 — 홈 화면에 노출 검토)
+- [x] 질문 생성 시 `resolved_before_session_id` 자동 연결 ("다음 발표 전까지 공유" 마감 기준), `PATCH /api/questions/{id}`에 관리자 권한 체크 추가
+- [x] `GET /api/questions/mine`, `GET /api/feedbacks/mine` — 로그인한 사용자 본인이 남긴 질문/피드백 조회 (마이페이지용)
+- [x] 페이지네이션 — fines/applications/users/questions(unresolved) 목록에 `skip`/`limit`
+- [x] 예외 처리 통일 — 전역 핸들러가 처리 안 된 예외도 `{"detail": "서버 오류가 발생했습니다"}` 500 JSON으로 통일 응답
+- [ ] applications 승인 시 실제 로그인 권한과 자동 연결되는 로직은 없음 (신청 승인을 로그인 게이트로 쓸 건지 운영 방식 확정 필요)
 - [ ] 세션 상태 변경(연기/취소) 시 관련 벌금·질문 처리 정책 결정
 - [ ] 세션 등 나머지 입력 검증 강화 (예: 같은 날짜 중복 세션 방지 — "발표는 하루에 한 명씩" 규칙)
 
 ## 3. 프론트엔드 페이지
-- [x] 라우팅 (`/`, `/apply`, `/schedule`, `/sessions/:id`, `/sessions/:id/questions`, `/fines`, `/members`, `/mypage`, `/login`, `/admin`)
-- [x] AuthGuard (로그인/관리자 전용 라우트 보호) — `/apply`도 로그인 필요로 전환
-- [x] `/apply` — 로그인 필요, 학번/이름/전화번호/분야(2개+ 동적 추가)/설명회 가능 시간(관리자가 설정한 옵션 중 라디오 선택, 옵션 없으면 자유 입력 폴백)/개인정보 동의/규칙 동의(예·아니오), 신청 기간 아니면 폼 대신 안내 문구
-- [x] `/admin` — "설정" 섹션(신청 기간 + 설명회 시간 옵션 편집), 신청 승인/거절 + 설명회 일시·장소 입력 후 SMS 발송, 참가자 role 변경
-- [x] `/` 홈 — 스터디 소개 전체 콘텐츠(진행 방식/발표 구성/참가자 역할/질문 문화/목표/벌금표/클로징 문구) + 다음 발표 카드
-- [x] `/sessions/:id` — SessionTabs의 Q&A 탭이 실제 질문 목록 조회 + 등록 폼으로 동작 (예전엔 빈 화면이었음)
-- [x] 디자인 시스템 전면 개편 (카드/뱃지/버튼/폼 스타일, sticky 네비게이션, 그라디언트 포인트, 다크모드 지원)
-- [x] 반응형 CSS — 640px 이하에서 네비/폼/테이블/카드 레이아웃 조정, 테이블은 `.table-wrap`으로 가로 스크롤 처리
-- [x] 전체 프론트엔드 TypeScript 전환 (.jsx/.js → .tsx/.ts), `types.ts`에 API 응답 타입 정의, `npm run build`가 `tsc --noEmit` 게이트 통과해야 성공
-- [ ] `/apply` 제출 후 이메일 등 확인 알림 (현재는 화면 안내 문구만)
+- [x] 라우팅 (`/`, `/apply`, `/schedule`, `/sessions/:id`, `/sessions/:id/questions`, `/fines`, `/members`, `/members/:id`, `/mypage`, `/login`, `/admin`)
+- [x] AuthGuard (로그인/관리자 전용 라우트 보호)
+- [x] `/apply` — 로그인 필요, 학번/이름/전화번호/분야(2개+)/설명회 가능 시간(관리자 설정 옵션 라디오)/개인정보 동의/규칙 동의, 신청 기간 아니면 안내 문구
+- [x] `/admin` — 설정(신청 기간+설명회 옵션), 신청 승인/거절+SMS, 참가자 role 변경, **일정 생성/수정 폼**, **벌금 부과/면제 폼**, **출석 체크 UI** — 전부 관리자 전용 페이지 안에만 존재
+- [x] `/` 홈 — 스터디 소개 전체 콘텐츠 + 다음 발표 카드
+- [x] `/sessions/:id` — Q&A 탭이 실제 질문 목록+등록 폼으로 동작, 비로그인 시 로그인 안내로 대체
+- [x] `/sessions/:id/questions` — 비로그인 시 작성 폼 대신 로그인 안내
+- [x] `/fines` — 참가자별로 묶어서 표시 (사용자별 소계 + 개별 내역)
+- [x] `/members/:id` — 참가자 상세(역할 뱃지 + 발표 이력)
+- [x] `/mypage` — 발표 일정 + 내가 남긴 질문(해결 여부 뱃지) + 내가 남긴 피드백
+- [x] 디자인 시스템 전면 개편 (카드/뱃지/버튼/폼, sticky 네비게이션, 그라디언트, 다크모드)
+- [x] 반응형 CSS, 클로징 인용구 박스 `text-wrap: balance`로 줄바꿈 개선
+- [x] 전체 프론트엔드 TypeScript 전환, `types.ts` API 타입, `npm run build`가 `tsc --noEmit` 게이트
+- [ ] `/apply` 제출 후 이메일 확인 알림 (이메일 발송 인프라 없음 — 필요하면 SolAPI 알림톡/SMS로 대체 검토)
 - [ ] `/schedule`: 캘린더 뷰 (현재는 리스트만)
-- [ ] `/sessions/:id`: 발표자료 첨부/업로드 UI, 퀴즈 탭 → QuizRunner 실제 연결 (현재 quiz_json 그대로 표시만 함)
-- [ ] `/sessions/:id/questions`(및 Q&A 탭): 답변 등록/해결 처리 UI — 백엔드는 admin 권한으로 준비됐지만 프론트 UI가 아직 없음
-- [ ] `/fines`: 참가자별 누적 벌금 그룹핑 (현재 전체 리스트 + 총액만)
-- [ ] `/members/:id` 상세 프로필 라우트/페이지 (Members.tsx에 링크는 이미 있음)
-- [ ] `/mypage`: 내가 남긴 질문/피드백 목록 추가 (현재 발표 일정만)
-- [ ] `/admin`: 일정 생성/수정 폼, 벌금 부과 폼(사유 선택 + 면제 체크), 출석 체크 UI — 지금은 목록 조회만 가능 (attendances는 API만 있고 프론트 없음)
+- [ ] `/sessions/:id`: 퀴즈 탭 → QuizRunner 실제 연결 (관리자가 JSON으로 퀴즈 입력은 가능해졌지만 응시자용 UI는 아직 텍스트만 노출)
+- [ ] 미해결 질문 목록을 홈 화면 등에 노출 (`GET /api/questions/unresolved`)
 - [ ] 로딩/에러 상태 UI (스피너, 공통 에러 메시지 컴포넌트)
 
 ## 4. 비기능 요구사항
 - [x] 반응형 스타일
-- [ ] 질문 작성이 로그인 사용자만 가능하다는 걸 프론트에서도 방어 (현재 QuestionBoard/Q&A 탭에 AuthGuard 없음)
-- [ ] 관리자만 벌금 부과/일정 조정 가능하도록 프론트 UI에서 버튼 숨김 처리 (해당 폼 자체가 아직 없어서 실질적 문제는 없음, 폼 추가 시 같이 처리)
+- [x] 질문 작성이 로그인 사용자만 가능하다는 걸 프론트에서도 방어 (QuestionBoard/Q&A 탭 모두 비로그인 시 폼 대신 안내)
+- [x] 관리자만 벌금 부과/일정 조정 가능 — 해당 폼들이 `/admin`(AuthGuard adminOnly) 안에만 존재해서 구조적으로 보장됨
 
 ## 5. 테스트
 - [ ] 백엔드 API 테스트 (pytest) — 도메인/admin 화이트리스트, applications 검증 로직, 신청 기간 제한
-- [ ] 프론트 주요 플로우 수동 QA (로그인 → 참가 신청 → 관리자 승인 → SMS 수신 → 세션 질문 등록)
+- [ ] 프론트 주요 플로우 수동 QA (로그인 → 참가 신청 → 관리자 승인 → SMS 수신 → 세션 질문 등록 → 출석/벌금 관리)

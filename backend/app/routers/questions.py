@@ -69,6 +69,11 @@ def list_unresolved_questions(
     )
 
 
+@questions_router.get("/mine", response_model=list[QuestionRead])
+def list_my_questions(db: DBSession = Depends(get_db), user: User = Depends(get_current_user)):
+    return db.query(Question).filter(Question.author_id == user.id).order_by(Question.created_at.desc()).all()
+
+
 @questions_router.patch("/{question_id}", response_model=QuestionRead)
 def update_question(
     question_id: int,

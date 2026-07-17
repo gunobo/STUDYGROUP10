@@ -38,6 +38,14 @@ export interface Question {
   created_at: string;
 }
 
+export interface Feedback {
+  id: number;
+  session_id: number;
+  author_id: number;
+  content: string;
+  created_at: string;
+}
+
 export type FineReason = "무단불참" | "자료미준비" | "무단지각" | "당일취소" | "기타";
 
 export interface Fine {
@@ -81,4 +89,14 @@ export interface StudySettings {
 
 export interface UserDetail extends User {
   sessions: StudySession[];
+}
+
+export type AttendanceStatus = "출석" | "지각" | "불참";
+
+export interface Attendance {
+  id: number;
+  session_id: number;
+  user_id: number;
+  status: AttendanceStatus;
+  checked_at: string;
 }

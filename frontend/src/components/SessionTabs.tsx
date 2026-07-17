@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import client from "../api/client";
+import { useAuthStore } from "../store/useAuthStore";
 import type { Question, StudySession } from "../types";
 import QuestionItem from "./QuestionItem";
 
@@ -13,6 +14,7 @@ const TABS = [
 ] as const;
 
 function QATab({ sessionId }: { sessionId: number }) {
+  const user = useAuthStore((state) => state.user);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [content, setContent] = useState("");
 
@@ -32,10 +34,16 @@ function QATab({ sessionId }: { sessionId: number }) {
 
   return (
     <div className="qa-tab">
-      <form className="question-form" onSubmit={submit}>
-        <input value={content} onChange={(e) => setContent(e.target.value)} placeholder="질문을 입력하세요" />
-        <button type="submit">등록</button>
-      </form>
+      {user ? (
+        <form className="question-form" onSubmit={submit}>
+          <input value={content} onChange={(e) => setContent(e.target.value)} placeholder="질문을 입력하세요" />
+          <button type="submit">등록</button>
+        </form>
+      ) : (
+        <p className="note">
+          로그인 후 질문을 남길 수 있습니다. <a href="/api/auth/google/login">구글 계정으로 로그인</a>
+        </p>
+      )}
       {questions.length === 0 ? (
         <p className="note">아직 등록된 질문이 없습니다.</p>
       ) : (
