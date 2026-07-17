@@ -23,7 +23,14 @@ cp .env.example .env
 cd backend
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
+alembic upgrade head   # DB 스키마 적용 (최초 1회 + 마이그레이션 추가될 때마다)
 uvicorn app.main:app --reload
+```
+
+스키마는 Alembic으로 관리합니다 (`Base.metadata.create_all`은 더 이상 안 씀). 모델을 바꾸면:
+```bash
+alembic revision --autogenerate -m "설명"
+alembic upgrade head
 ```
 
 ### 프론트엔드 (React + Vite)

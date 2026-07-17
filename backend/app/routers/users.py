@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session as DBSession
 
 from app.db.base import get_db
@@ -16,8 +16,12 @@ class UserDetail(UserRead):
 
 
 @router.get("", response_model=list[UserRead])
-def list_users(db: DBSession = Depends(get_db)):
-    return db.query(User).all()
+def list_users(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(200, ge=1, le=500),
+    db: DBSession = Depends(get_db),
+):
+    return db.query(User).offset(skip).limit(limit).all()
 
 
 @router.get("/{user_id}", response_model=UserDetail)

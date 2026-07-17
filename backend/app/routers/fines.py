@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session as DBSession
 
 from app.db.base import get_db
@@ -11,11 +11,16 @@ router = APIRouter(prefix="/api/fines", tags=["fines"])
 
 
 @router.get("", response_model=list[FineRead])
-def list_fines(user_id: int | None = None, db: DBSession = Depends(get_db)):
+def list_fines(
+    user_id: int | None = None,
+    skip: int = Query(0, ge=0),
+    limit: int = Query(50, ge=1, le=200),
+    db: DBSession = Depends(get_db),
+):
     query = db.query(Fine)
     if user_id is not None:
         query = query.filter(Fine.user_id == user_id)
-    return query.order_by(Fine.created_at.desc()).all()
+    return query.order_by(Fine.created_at.desc()).offset(skip).limit(limit).all()
 
 
 @router.post("", response_model=FineRead, status_code=status.HTTP_201_CREATED)

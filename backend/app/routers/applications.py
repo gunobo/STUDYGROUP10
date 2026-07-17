@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session as DBSession
 
 from app.db.base import get_db
@@ -46,8 +46,13 @@ def create_application(
 
 
 @router.get("", response_model=list[ApplicationRead])
-def list_applications(db: DBSession = Depends(get_db), _=Depends(require_admin)):
-    return db.query(Application).order_by(Application.created_at.desc()).all()
+def list_applications(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(50, ge=1, le=200),
+    db: DBSession = Depends(get_db),
+    _=Depends(require_admin),
+):
+    return db.query(Application).order_by(Application.created_at.desc()).offset(skip).limit(limit).all()
 
 
 @router.patch("/{application_id}", response_model=ApplicationRead)
