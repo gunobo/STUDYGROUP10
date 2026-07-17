@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -28,6 +30,10 @@ class Settings(BaseSettings):
     solapi_api_key: str = ""
     solapi_api_secret: str = ""
     solapi_sender_phone: str = ""
+
+    # 참가 신청 기간 (비워두면 해당 방향 제한 없음)
+    application_opens_at: datetime | None = None
+    application_closes_at: datetime | None = None
 
     @property
     def allowed_domains_list(self) -> list[str]:

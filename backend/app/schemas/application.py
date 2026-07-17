@@ -43,6 +43,12 @@ class ApplicationCreate(BaseModel):
         return value
 
 
+class ApplicationWindow(BaseModel):
+    opens_at: datetime | None
+    closes_at: datetime | None
+    is_open: bool
+
+
 class ApplicationUpdate(BaseModel):
     status: ApplicationStatus
     # 승인(status="승인") 시 문자에 담을 설명회 일시/장소

@@ -1,14 +1,31 @@
+from datetime import datetime
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session as DBSession
 
+from app.core.config import settings
 from app.db.base import get_db
 from app.deps import get_current_user, require_admin
 from app.models.application import Application, ApplicationStatus
 from app.models.user import User
-from app.schemas.application import ApplicationCreate, ApplicationRead, ApplicationUpdate
+from app.schemas.application import (
+    ApplicationCreate,
+    ApplicationRead,
+    ApplicationUpdate,
+    ApplicationWindow,
+)
 from app.senders.sms import send_sms
 
 router = APIRouter(prefix="/api/applications", tags=["applications"])
+
+
+def _is_application_open(now: datetime | None = None) -> bool:
+    now = now or datetime.now()
+    if settings.application_opens_at and now < settings.application_opens_at:
+        return False
+    if settings.application_closes_at and now > settings.application_closes_at:
+        return False
+    return True
 
 
 def _approval_message(application: Application) -> str:
