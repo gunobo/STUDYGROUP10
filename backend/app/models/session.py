@@ -29,4 +29,6 @@ class Session(Base):
     demo_note: Mapped[str | None] = mapped_column(Text, nullable=True)
     summary_note: Mapped[str | None] = mapped_column(Text, nullable=True)
     quiz_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    # 발표 신청 시 등록된 디스코드 서버 이벤트 id (취소 시 삭제하기 위해 보관)
+    discord_event_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())

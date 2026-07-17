@@ -38,6 +38,14 @@ class Settings(BaseSettings):
     # 디스코드 웹훅 (일정 오픈/발표 신청 알림, 비워두면 알림 안 보냄)
     discord_webhook_url: str = ""
 
+    # 디스코드 봇 — 발표 신청 시 서버 이벤트(Scheduled Event) 자동 등록
+    discord_bot_token: str = ""
+    discord_guild_id: str = ""
+    discord_voice_channel_id: str = ""
+    # 발표 고정 시간 (HH:MM, 24시간제) — 날짜만 입력받으므로 여기에 자동으로 붙임
+    presentation_time: str = "21:00"
+    presentation_duration_minutes: int = 60
+
     @property
     def allowed_domains_list(self) -> list[str]:
         return [d.strip() for d in self.allowed_email_domains.split(",") if d.strip()]

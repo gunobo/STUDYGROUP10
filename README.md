@@ -89,6 +89,23 @@ docker ps | grep cloudflared   # study2026-cloudflared-1 확인
 curl -I https://study2026.bssm.dev
 ```
 
+## 디스코드 봇 설정 (발표 신청 시 서버 이벤트 자동 등록)
+
+학생이 마이페이지에서 발표를 신청하면 디스코드 서버 "이벤트"로 자동 등록됩니다 (음성채널 연결). 봇을 새로 만들어야 합니다.
+
+1. [Discord Developer Portal](https://discord.com/developers/applications) 접속 → **New Application** → 이름 입력(예: study2026-bot) → 생성
+2. 왼쪽 메뉴 **Bot** 탭 → **Reset Token** → 나온 토큰 복사 (`DISCORD_BOT_TOKEN`) — 이 화면 나가면 다시 못 보니 바로 저장
+3. 왼쪽 메뉴 **OAuth2 → URL Generator** →
+   - **SCOPES**: `bot` 체크
+   - **BOT PERMISSIONS**: `Manage Events` 체크 (음성채널 확인용으로 `View Channels`도 체크 권장)
+   - 하단에 생성된 URL을 브라우저에 붙여넣기 → 서버 관리 권한 있는 계정으로 로그인해서 봇을 스터디 서버에 초대
+4. 디스코드 앱에서 **설정 → 고급 → 개발자 모드** 켜기
+5. 서버 아이콘 우클릭 → **ID 복사** → `DISCORD_GUILD_ID`
+6. 발표할 음성채널 우클릭 → **ID 복사** → `DISCORD_VOICE_CHANNEL_ID`
+7. `.env`에 `DISCORD_BOT_TOKEN` / `DISCORD_GUILD_ID` / `DISCORD_VOICE_CHANNEL_ID`와, 실제 발표 시작 시각으로 `PRESENTATION_TIME`(예: `21:00`) 채우기
+
+세 값(토큰/길드/채널) 중 하나라도 비어있으면 이벤트 등록 없이 조용히 스킵되고 나머지 기능엔 영향 없습니다. 세션이 "취소" 상태로 바뀌면 등록해둔 이벤트도 자동으로 삭제됩니다.
+
 ## 프로젝트 구조
 ```
 backend/   FastAPI 앱 (app/models, schemas, routers)

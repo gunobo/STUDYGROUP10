@@ -10,6 +10,7 @@ from app.models.session import Session, SessionStatus
 from app.models.user import User
 from app.schemas.session import SessionClaim, SessionCreate, SessionRead, SessionUpdate
 from app.senders.discord import send_discord_message
+from app.senders.discord_events import create_scheduled_event, delete_scheduled_event
 
 router = APIRouter(prefix="/api/sessions", tags=["sessions"])
 
@@ -64,7 +65,7 @@ def get_session(session_id: int, db: DBSession = Depends(get_db)):
 
 
 @router.patch("/{session_id}", response_model=SessionRead)
-def update_session(
+async def update_session(
     session_id: int,
     payload: SessionUpdate,
     db: DBSession = Depends(get_db),
@@ -75,6 +76,11 @@ def update_session(
         raise HTTPException(status.HTTP_404_NOT_FOUND, "세션을 찾을 수 없습니다")
     for field, value in payload.model_dump(exclude_unset=True).items():
         setattr(session, field, value)
+
+    if payload.status == SessionStatus.canceled and session.discord_event_id:
+        await delete_scheduled_event(session.discord_event_id)
+        session.discord_event_id = None
+
     db.commit()
     db.refresh(session)
     return session
@@ -118,5 +124,11 @@ async def claim_session(
     await send_discord_message(
         f"🎤 **{user.name}**님이 **{session.scheduled_date}** 발표를 신청했습니다!\n주제: {session.topic}"
     )
+
+    event_id = await create_scheduled_event(session.scheduled_date, session.topic, user.name)
+    if event_id:
+        session.discord_event_id = event_id
+        db.commit()
+        db.refresh(session)
 
     return session
