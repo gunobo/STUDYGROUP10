@@ -50,15 +50,18 @@ study2026 전용 터널을 CLI로 새로 파서 `docker-compose.yml`의 `cloudfl
 
 ```bash
 mkdir -p cloudflared
+chmod 777 cloudflared   # cloudflared 이미지의 nonroot 유저가 쓸 수 있도록 임시로 개방
 
 # 1) 로그인 (URL이 출력되면 브라우저에서 열어 bssm.dev 선택 후 승인)
-docker run -it --rm -u $(id -u):$(id -g) -e HOME=/home/nonroot -v $(pwd)/cloudflared:/home/nonroot/.cloudflared cloudflare/cloudflared:latest tunnel login
+docker run -it --rm -v $(pwd)/cloudflared:/home/nonroot/.cloudflared cloudflare/cloudflared:latest tunnel login
 
 # 2) 터널 생성 (출력되는 UUID를 기록해두기)
-docker run -it --rm -u $(id -u):$(id -g) -e HOME=/home/nonroot -v $(pwd)/cloudflared:/home/nonroot/.cloudflared cloudflare/cloudflared:latest tunnel create study2026
+docker run -it --rm -v $(pwd)/cloudflared:/home/nonroot/.cloudflared cloudflare/cloudflared:latest tunnel create study2026
 
 # 3) DNS 라우팅 (study2026.bssm.dev → 이 터널)
-docker run -it --rm -u $(id -u):$(id -g) -e HOME=/home/nonroot -v $(pwd)/cloudflared:/home/nonroot/.cloudflared cloudflare/cloudflared:latest tunnel route dns study2026 study2026.bssm.dev
+docker run -it --rm -v $(pwd)/cloudflared:/home/nonroot/.cloudflared cloudflare/cloudflared:latest tunnel route dns study2026 study2026.bssm.dev
+
+chmod 755 cloudflared   # 다 끝나면 다시 잠그기 (compose의 cloudflared 서비스는 읽기만 하면 되므로 755로 충분)
 ```
 
 `cloudflared/config.yml` 생성 (2번에서 나온 UUID로 `<TUNNEL_UUID>` 교체):
