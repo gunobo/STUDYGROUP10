@@ -8,7 +8,7 @@
 - 백엔드: FastAPI
 - DB: MySQL
 - 인증: Google OAuth 2.0 (학교 구글 계정 화이트리스트)
-- 배포: Docker Compose + Cloudflare Tunnel
+- 배포: Docker Compose + Cloudflare Tunnel (study2026 전용 터널)
 
 ## 로컬 개발
 
@@ -45,7 +45,12 @@ docker compose up --build
 - backend: http://localhost:8005
 - mysql: localhost:3313
 
-배포 시 cloudflared ingress에서는 `http://localhost:5103`(frontend)을 study2026.bssm.dev로 연결합니다.
+### 배포 (Cloudflare Tunnel)
+study2026 전용 터널을 하나 새로 파서 `docker-compose.yml`의 `cloudflared` 서비스로 같이 띄웁니다 (다른 프로젝트의 터널/설정은 건드리지 않음).
+1. Cloudflare Zero Trust 대시보드(one.dash.cloudflare.com) → Networks → Tunnels → Create a tunnel → 이름 `study2026`
+2. Docker 탭에서 나오는 토큰을 `.env`의 `CLOUDFLARE_TUNNEL_TOKEN`에 채우기
+3. Public Hostname: `study2026.bssm.dev` → Service `http://frontend:80` 로 등록 (DNS 레코드 자동 생성)
+4. `docker compose up -d --build`
 
 ## 프로젝트 구조
 ```
