@@ -14,3 +14,7 @@ class UserRead(BaseModel):
     profile_image_url: str | None
     role: UserRole
     created_at: datetime
+
+
+class UserUpdate(BaseModel):
+    role: UserRole

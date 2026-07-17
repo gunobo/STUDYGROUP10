@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
 import client from "../api/client";
+import { useAuthStore } from "../store/useAuthStore";
 
 export default function Admin() {
+  const currentUser = useAuthStore((state) => state.user);
   const [sessions, setSessions] = useState([]);
   const [fines, setFines] = useState([]);
   const [applications, setApplications] = useState([]);
+  const [users, setUsers] = useState([]);
   const [approvingId, setApprovingId] = useState(null);
   const [orientationAt, setOrientationAt] = useState("");
   const [orientationPlace, setOrientationPlace] = useState("");
@@ -14,11 +17,21 @@ export default function Admin() {
     client.get("/applications").then(({ data }) => setApplications(data));
   };
 
+  const loadUsers = () => {
+    client.get("/users").then(({ data }) => setUsers(data));
+  };
+
   useEffect(() => {
     client.get("/sessions").then(({ data }) => setSessions(data));
     client.get("/fines").then(({ data }) => setFines(data));
     loadApplications();
+    loadUsers();
   }, []);
+
+  const changeRole = async (userId, role) => {
+    await client.patch(`/users/${userId}`, { role });
+    loadUsers();
+  };
 
   const startApprove = (application) => {
     setApprovingId(application.id);
@@ -105,6 +118,28 @@ export default function Admin() {
           </li>
         ))}
       </ul>
+
+      <h2>참가자 관리</h2>
+      <ul>
+        {users.map((u) => (
+          <li key={u.id}>
+            <strong>{u.name}</strong> ({u.email}){" "}
+            <span className={`badge ${u.role === "admin" ? "badge--admin" : "badge--member"}`}>
+              {u.role === "admin" ? "관리자" : "일반"}
+            </span>
+            <select
+              className="role-select"
+              value={u.role}
+              disabled={u.id === currentUser?.id}
+              onChange={(e) => changeRole(u.id, e.target.value)}
+            >
+              <option value="member">일반</option>
+              <option value="admin">관리자</option>
+            </select>
+          </li>
+        ))}
+      </ul>
+      <p className="note">본인 역할은 변경할 수 없습니다.</p>
 
       <h2>일정 관리</h2>
       <ul>

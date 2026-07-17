@@ -69,8 +69,7 @@ a {
   justify-content: space-between;
   gap: 1.5rem;
   padding: 0.9rem 1.75rem;
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(10px);
+  background: var(--color-surface);
   border-bottom: 1px solid var(--color-border);
 }
 
@@ -541,6 +540,144 @@ section > ul > li > a {
   padding: 0.7rem 1.5rem;
 }
 
+/* ---------- home intro content ---------- */
+
+section h3 {
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+  margin-bottom: 0.5rem;
+}
+
+.note {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+.plain-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.plain-list li {
+  position: relative;
+  padding-left: 1.1rem;
+  line-height: 1.6;
+  color: var(--color-text);
+}
+
+.plain-list li::before {
+  content: "";
+  position: absolute;
+  left: 0.15rem;
+  top: 0.65rem;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--color-primary);
+}
+
+.quote {
+  border-left: 3px solid var(--color-primary);
+  background: var(--color-primary-soft);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  padding: 0.9rem 1.2rem;
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.quote--closing {
+  border-left: none;
+  text-align: center;
+  font-size: 1.05rem;
+  font-weight: 800;
+  padding: 1.75rem 1.5rem;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  margin-top: 0.5rem;
+}
+
+.flow-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.flow-row__step {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: 0.5rem 1.1rem;
+  font-weight: 700;
+  font-size: 0.88rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.flow-row__arrow {
+  color: var(--color-text-muted);
+  font-weight: 700;
+}
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.chip {
+  background: var(--color-neutral-soft);
+  color: var(--color-text);
+  border-radius: 999px;
+  padding: 0.4rem 0.85rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.role-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.role-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.role-card__title {
+  font-size: 1rem;
+  font-weight: 800;
+  margin-bottom: 0.75rem;
+}
+
+/* ---------- role badge (admin) ---------- */
+
+.badge--admin {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+
+.badge--member {
+  background: var(--color-neutral-soft);
+  color: var(--color-text-muted);
+}
+
+.role-select {
+  width: auto;
+  display: inline-block;
+  padding: 0.35rem 0.6rem;
+  font-size: 0.85rem;
+  margin-left: 0.6rem;
+}
+
 /* ---------- responsive ---------- */
 
 @media (max-width: 640px) {
@@ -562,5 +699,9 @@ section > ul > li > a {
 
   .schedule-card {
     flex-wrap: wrap;
+  }
+
+  .role-grid {
+    grid-template-columns: 1fr;
   }
 }
