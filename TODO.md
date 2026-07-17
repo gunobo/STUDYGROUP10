@@ -64,6 +64,7 @@
 - [x] 디스코드 웹훅 알림 — `DISCORD_WEBHOOK_URL` 설정 시 (1) 관리자가 발표 날짜를 열면 "새 날짜 열림" 안내, (2) 학생이 발표를 신청(claim)하면 이름/날짜/주제 안내가 채널에 자동 발송됨. 값 비어있으면 조용히 스킵
 - [x] 디스코드 서버 이벤트(Scheduled Event) 자동 등록 — 발표 신청 시 `DISCORD_BOT_TOKEN`/`DISCORD_GUILD_ID`/`DISCORD_VOICE_CHANNEL_ID` 설정돼 있으면 지정 음성채널에 연결된 이벤트를 자동 생성(`Session.discord_event_id`에 저장), 세션이 "취소"로 바뀌면 이벤트도 자동 삭제. 날짜만 입력받으므로 시작 시각은 `PRESENTATION_TIME`(기본 21:00) 환경변수로 고정. 봇 발급 절차는 README "디스코드 봇 설정" 참고. 실제 admin/student 토큰으로 생성→신청→취소 전체 플로우 Docker로 검증 완료
 - [x] 디스코드 이벤트 설정값(길드ID/음성채널ID/발표 시작 시각/진행 시간) 관리자 페이지 편집 — `study_settings` 테이블에 4개 컬럼 추가(마이그레이션 `6eaf7294f2b4`), `/admin` 설정 폼에 "디스코드 발표 이벤트" 섹션 추가. `.env` 값은 최초 기본값으로만 쓰이고 이후엔 DB 값이 우선(`discord_events.py`가 `.env` → DB 순으로 폴백). 봇 토큰만 비밀값이라 계속 `.env` 전용. `PATCH /api/settings`에 `presentation_time` HH:MM 형식 검증 추가, admin 권한/유효성 검사 curl로 확인 완료
+- [x] 디스코드 봇을 서버 기동 시 함께 접속시켜 "온라인" 표시 — `app/discord_bot.py`가 FastAPI `lifespan`에서 `DISCORD_BOT_TOKEN` 있으면 백그라운드 asyncio task로 게이트웨이 접속(별도 컨테이너 불필요), 앱 종료 시 정상 종료. 토큰 없음/잘못됨 모두 예외를 잡아 서버 기동·API 동작에 영향 없음을 Docker로 확인(정상 케이스/토큰 없음/토큰 오류 3가지 다 헬스체크 통과). 이벤트 생성/삭제(REST)는 이 게이트웨이 접속과 무관하게 항상 독립적으로 동작
 - [ ] 세션 날짜/주제를 사후에 수정(PATCH)해도 이미 등록된 디스코드 이벤트 시각은 자동으로 안 바뀜 (취소 시 삭제만 지원) — 필요하면 업데이트 동기화 추가
 
 ## 4. 비기능 요구사항
