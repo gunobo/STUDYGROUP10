@@ -46,11 +46,36 @@ docker compose up --build
 - mysql: localhost:3313
 
 ### 배포 (Cloudflare Tunnel)
-study2026 전용 터널을 하나 새로 파서 `docker-compose.yml`의 `cloudflared` 서비스로 같이 띄웁니다 (다른 프로젝트의 터널/설정은 건드리지 않음).
-1. Cloudflare Zero Trust 대시보드(one.dash.cloudflare.com) → Networks → Tunnels → Create a tunnel → 이름 `study2026`
-2. Docker 탭에서 나오는 토큰을 `.env`의 `CLOUDFLARE_TUNNEL_TOKEN`에 채우기
-3. Public Hostname: `study2026.bssm.dev` → Service `http://frontend:80` 로 등록 (DNS 레코드 자동 생성)
-4. `docker compose up -d --build`
+study2026 전용 터널을 CLI로 새로 파서 `docker-compose.yml`의 `cloudflared` 서비스로 같이 띄웁니다 (다른 프로젝트의 터널/설정은 건드리지 않음). `cloudflared/` 디렉토리에 인증서·자격증명이 생기며 git에는 커밋되지 않습니다.
+
+```bash
+mkdir -p cloudflared
+
+# 1) 로그인 (URL이 출력되면 브라우저에서 열어 bssm.dev 선택 후 승인)
+docker run -it --rm -v $(pwd)/cloudflared:/root/.cloudflared cloudflare/cloudflared:latest tunnel login
+
+# 2) 터널 생성 (출력되는 UUID를 기록해두기)
+docker run -it --rm -v $(pwd)/cloudflared:/root/.cloudflared cloudflare/cloudflared:latest tunnel create study2026
+
+# 3) DNS 라우팅 (study2026.bssm.dev → 이 터널)
+docker run -it --rm -v $(pwd)/cloudflared:/root/.cloudflared cloudflare/cloudflared:latest tunnel route dns study2026 study2026.bssm.dev
+```
+
+`cloudflared/config.yml` 생성 (2번에서 나온 UUID로 `<TUNNEL_UUID>` 교체):
+```yaml
+tunnel: <TUNNEL_UUID>
+credentials-file: /etc/cloudflared/<TUNNEL_UUID>.json
+ingress:
+  - hostname: study2026.bssm.dev
+    service: http://frontend:80
+  - service: http_status:404
+```
+
+```bash
+docker compose up -d --build
+docker ps | grep cloudflared   # study2026-cloudflared-1 확인
+curl -I https://study2026.bssm.dev
+```
 
 ## 프로젝트 구조
 ```

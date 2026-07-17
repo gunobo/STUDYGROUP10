@@ -11,5 +11,8 @@ backend/*.egg-info/
 frontend/node_modules/
 frontend/dist/
 
+# cloudflared (cert.pem, 터널 credentials json)
+cloudflared/
+
 # misc
 .DS_Store
