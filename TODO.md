@@ -64,13 +64,13 @@
 - [x] `/schedule`, 홈 — 발표 세션과 설명회/공지/회의 일정(`calendar_events`)을 날짜순으로 합쳐서 리스트로 표시, 종류별 뱃지 색상 구분 (`EventCard.tsx`, `Schedule.tsx`). 브라우저로 렌더링 확인 완료(같은 날짜 2개 세션 + 이벤트 2개 정상 표시)
 - [ ] `/schedule`: 캘린더 뷰 (현재는 리스트만)
 - [ ] `/sessions/:id`: 퀴즈 탭 → QuizRunner 실제 연결 (관리자가 JSON으로 퀴즈 입력은 가능해졌지만 응시자용 UI는 아직 텍스트만 노출)
-- [ ] 미해결 질문 목록을 홈 화면 등에 노출 (`GET /api/questions/unresolved`)
+- [x] 미해결 질문 목록을 홈 화면에 노출 — `GET /api/questions/unresolved` 최대 5개를 "다음 발표" 카드 밑에 표시, 세션 주제로 링크 연결. 미해결 질문 없으면 섹션 자체를 숨김
 - [ ] 로딩/에러 상태 UI (스피너, 공통 에러 메시지 컴포넌트)
 - [x] 디스코드 웹훅 알림 — `DISCORD_WEBHOOK_URL` 설정 시 (1) 관리자가 발표 날짜를 열면 "새 날짜 열림" 안내, (2) 학생이 발표를 신청(claim)하면 이름/날짜/주제 안내가 채널에 자동 발송됨. 값 비어있으면 조용히 스킵
 - [x] 디스코드 서버 이벤트(Scheduled Event) 자동 등록 — 발표 신청 시 `DISCORD_BOT_TOKEN`/`DISCORD_GUILD_ID`/`DISCORD_VOICE_CHANNEL_ID` 설정돼 있으면 지정 음성채널에 연결된 이벤트를 자동 생성(`Session.discord_event_id`에 저장), 세션이 "취소"로 바뀌면 이벤트도 자동 삭제. 날짜만 입력받으므로 시작 시각은 `PRESENTATION_TIME`(기본 21:00) 환경변수로 고정. 봇 발급 절차는 README "디스코드 봇 설정" 참고. 실제 admin/student 토큰으로 생성→신청→취소 전체 플로우 Docker로 검증 완료
 - [x] 디스코드 이벤트 설정값(길드ID/음성채널ID/발표 시작 시각/진행 시간) 관리자 페이지 편집 — `study_settings` 테이블에 4개 컬럼 추가(마이그레이션 `6eaf7294f2b4`), `/admin` 설정 폼에 "디스코드 발표 이벤트" 섹션 추가. `.env` 값은 최초 기본값으로만 쓰이고 이후엔 DB 값이 우선(`discord_events.py`가 `.env` → DB 순으로 폴백). 봇 토큰만 비밀값이라 계속 `.env` 전용. `PATCH /api/settings`에 `presentation_time` HH:MM 형식 검증 추가, admin 권한/유효성 검사 curl로 확인 완료
 - [x] 디스코드 봇을 서버 기동 시 함께 접속시켜 "온라인" 표시 — `app/discord_bot.py`가 FastAPI `lifespan`에서 `DISCORD_BOT_TOKEN` 있으면 백그라운드 asyncio task로 게이트웨이 접속(별도 컨테이너 불필요), 앱 종료 시 정상 종료. 토큰 없음/잘못됨 모두 예외를 잡아 서버 기동·API 동작에 영향 없음을 Docker로 확인(정상 케이스/토큰 없음/토큰 오류 3가지 다 헬스체크 통과). 이벤트 생성/삭제(REST)는 이 게이트웨이 접속과 무관하게 항상 독립적으로 동작
-- [ ] 세션 날짜/주제를 사후에 수정(PATCH)해도 이미 등록된 디스코드 이벤트 시각은 자동으로 안 바뀜 (취소 시 삭제만 지원) — 필요하면 업데이트 동기화 추가
+- [x] 세션 날짜/주제 수정 시 등록된 디스코드 이벤트도 동기화 — `discord_events.py`에 `update_scheduled_event()` 추가(디스코드 PATCH 이벤트 API), `PATCH /api/sessions/{id}`에서 `scheduled_date`나 `topic`이 바뀌고 `discord_event_id`가 있으면 자동 호출. 관련 없는 필드(예: `material_url`)만 바뀔 때는 호출 안 함. Docker로 두 경우 다 로그로 확인(주제 변경 시에만 디스코드 API 호출 시도)
 - [x] 발표 전날 디스코드 리마인더 — `app/reminders.py`가 FastAPI `lifespan`에서 백그라운드 asyncio 루프로 매일 KST 09:00에 "내일 예정 + 승인 확정된" 세션을 조회해서 발표자/주제를 디스코드 웹훅으로 안내. 별도 스케줄러 라이브러리 없이 `asyncio.sleep`으로 다음 09:00까지 대기하는 방식. `DISCORD_WEBHOOK_URL` 미설정 시 조용히 스킵. Docker에서 내일 날짜의 승인된 세션을 심어두고 리마인더 함수를 직접 실행해 쿼리·웹훅 호출까지 확인 완료
 
 ## 4. 비기능 요구사항

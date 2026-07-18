@@ -11,7 +11,7 @@ from app.models.session import Session, SessionClaimStatus, SessionStatus
 from app.models.user import User
 from app.schemas.session import SessionClaim, SessionCreate, SessionRead, SessionUpdate
 from app.senders.discord import send_discord_message
-from app.senders.discord_events import create_scheduled_event, delete_scheduled_event
+from app.senders.discord_events import create_scheduled_event, delete_scheduled_event, update_scheduled_event
 
 router = APIRouter(prefix="/api/sessions", tags=["sessions"])
 
@@ -88,12 +88,19 @@ async def update_session(
     session = db.get(Session, session_id)
     if session is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "세션을 찾을 수 없습니다")
-    for field, value in payload.model_dump(exclude_unset=True).items():
+
+    changed_fields = payload.model_dump(exclude_unset=True)
+    for field, value in changed_fields.items():
         setattr(session, field, value)
 
     if payload.status == SessionStatus.canceled and session.discord_event_id:
         await delete_scheduled_event(db, session.discord_event_id)
         session.discord_event_id = None
+    elif session.discord_event_id and ("scheduled_date" in changed_fields or "topic" in changed_fields):
+        presenter = db.get(User, session.presenter_id)
+        await update_scheduled_event(
+            db, session.discord_event_id, session.scheduled_date, session.topic, presenter.name if presenter else "발표자"
+        )
 
     db.commit()
     db.refresh(session)

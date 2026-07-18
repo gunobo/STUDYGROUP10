@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import client from "../api/client";
 import ScheduleCard from "../components/ScheduleCard";
-import type { StudySession } from "../types";
+import type { Question, StudySession } from "../types";
 
 const FINE_RULES = [
   { situation: "발표 당일 무단 불참", amount: "500원" },
@@ -13,13 +14,18 @@ const FINE_RULES = [
 ];
 
 export default function Home() {
-  const [nextSession, setNextSession] = useState<StudySession | null>(null);
+  const [sessions, setSessions] = useState<StudySession[]>([]);
+  const [unresolvedQuestions, setUnresolvedQuestions] = useState<Question[]>([]);
 
   useEffect(() => {
-    client.get<StudySession[]>("/sessions", { params: { status_: "예정" } }).then(({ data }) => {
-      setNextSession(data[0] ?? null);
-    });
+    client.get<StudySession[]>("/sessions").then(({ data }) => setSessions(data));
+    client
+      .get<Question[]>("/questions/unresolved", { params: { limit: 5 } })
+      .then(({ data }) => setUnresolvedQuestions(data));
   }, []);
+
+  const nextSession = sessions.find((s) => s.status === "예정") ?? null;
+  const sessionTopic = (sessionId: number) => sessions.find((s) => s.id === sessionId)?.topic ?? `세션 #${sessionId}`;
 
   return (
     <section>
@@ -32,6 +38,21 @@ export default function Home() {
 
       <h2>다음 발표</h2>
       {nextSession ? <ScheduleCard session={nextSession} /> : <p>예정된 발표가 없습니다.</p>}
+
+      {unresolvedQuestions.length > 0 && (
+        <>
+          <h2>미해결 질문</h2>
+          <p className="note">다음 발표 전까지 함께 조사해서 공유해야 하는 질문들입니다.</p>
+          <ul>
+            {unresolvedQuestions.map((q) => (
+              <li key={q.id}>
+                <Link to={`/sessions/${q.session_id}/questions`}>{sessionTopic(q.session_id)}</Link>
+                <p>{q.content}</p>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
 
       <h2>진행 방식</h2>
       <div className="flow-row">

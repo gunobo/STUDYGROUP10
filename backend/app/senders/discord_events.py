@@ -96,6 +96,36 @@ async def create_calendar_event(
     )
 
 
+async def update_scheduled_event(
+    db: DBSession, event_id: str, scheduled_date: date, topic: str, presenter_name: str
+) -> None:
+    """이미 등록된 발표 이벤트의 날짜/주제가 바뀌었을 때 디스코드 쪽도 갱신. 실패해도 예외 없이 조용히 넘어간다."""
+    row = get_settings(db)
+    if not _is_configured(row):
+        return
+
+    start = _combine(scheduled_date, _presentation_time(row))
+    end = start + timedelta(minutes=_presentation_duration(row))
+    payload = {
+        "name": f"{presenter_name} - {topic}",
+        "description": f"여름방학 회고 스터디 발표: {topic}",
+        "scheduled_start_time": start.isoformat(),
+        "scheduled_end_time": end.isoformat(),
+    }
+
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            resp = await client.patch(
+                f"{DISCORD_API}/guilds/{_guild_id(row)}/scheduled-events/{event_id}",
+                json=payload,
+                headers={"Authorization": f"Bot {env_settings.discord_bot_token}"},
+            )
+        if resp.status_code >= 400:
+            logger.error("디스코드 이벤트 수정 실패 (HTTP %s): %s", resp.status_code, resp.text)
+    except httpx.HTTPError:
+        logger.exception("디스코드 이벤트 수정 실패")
+
+
 async def delete_scheduled_event(db: DBSession, event_id: str) -> None:
     row = get_settings(db)
     if not _is_configured(row):
