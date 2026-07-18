@@ -16,7 +16,10 @@ export default function SessionDetail() {
 
   return (
     <section>
-      <h1>{session.topic ?? "발표자 모집 중"}</h1>
+      <h1>
+        {session.topic ?? "발표자 모집 중"}
+        {session.claim_status === "대기" && <span className="badge badge--pending">승인 대기</span>}
+      </h1>
       <p>{session.scheduled_date}</p>
       {session.material_url && (
         <a href={session.material_url} target="_blank" rel="noreferrer">

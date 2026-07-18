@@ -14,6 +14,11 @@ class SessionStatus(str, enum.Enum):
     postponed = "연기"
 
 
+class SessionClaimStatus(str, enum.Enum):
+    pending = "대기"
+    approved = "승인"
+
+
 class Session(Base):
     __tablename__ = "sessions"
 
@@ -21,6 +26,8 @@ class Session(Base):
     # 관리자가 날짜만 열어두면(둘 다 NULL) 승인된 학생이 /claim으로 채움
     presenter_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
     topic: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    # 학생이 /claim하면 '대기', 관리자가 승인하면 '승인'. 거절되면 presenter_id/topic과 함께 NULL로 리셋됨
+    claim_status: Mapped[SessionClaimStatus | None] = mapped_column(Enum(SessionClaimStatus), nullable=True)
     scheduled_date: Mapped[date] = mapped_column(Date)
     status: Mapped[SessionStatus] = mapped_column(Enum(SessionStatus), default=SessionStatus.scheduled)
     material_url: Mapped[str | None] = mapped_column(String(500), nullable=True)

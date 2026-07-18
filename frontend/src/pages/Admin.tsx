@@ -321,6 +321,25 @@ export default function Admin() {
     }
   };
 
+  const approveClaim = async (session: StudySession) => {
+    try {
+      await client.post(`/sessions/${session.id}/approve`);
+      loadSessions();
+    } catch (err: any) {
+      window.alert(err.response?.data?.detail ?? "승인에 실패했습니다.");
+    }
+  };
+
+  const rejectClaim = async (session: StudySession) => {
+    if (!window.confirm(`"${session.topic}" 발표 신청을 거절할까요? 슬롯이 다시 신청 가능 상태로 열립니다.`)) return;
+    try {
+      await client.post(`/sessions/${session.id}/reject`);
+      loadSessions();
+    } catch (err: any) {
+      window.alert(err.response?.data?.detail ?? "거절에 실패했습니다.");
+    }
+  };
+
   const createEvent = async (e: FormEvent) => {
     e.preventDefault();
     setEventError("");
@@ -617,8 +636,15 @@ export default function Admin() {
             <strong>{s.scheduled_date}</strong> —{" "}
             {s.topic ?? <span className="badge badge--pending">미배정 (신청 가능)</span>}{" "}
             <span className="badge">{s.status}</span>
+            {s.claim_status === "대기" && <span className="badge badge--pending">승인 대기</span>}
             {editingSessionId !== s.id && (
               <>
+                {s.claim_status === "대기" && (
+                  <>
+                    <button onClick={() => approveClaim(s)}>승인</button>
+                    <button onClick={() => rejectClaim(s)}>거절</button>
+                  </>
+                )}
                 <button onClick={() => startEditSession(s)}>수정</button>
                 <button onClick={() => deleteSession(s)}>삭제</button>
               </>

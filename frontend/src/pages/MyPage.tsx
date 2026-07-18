@@ -119,7 +119,9 @@ export default function MyPage() {
         <ul>
           {sessions.map((session) => (
             <li key={session.id}>
-              {session.scheduled_date} — {session.topic}
+              {session.scheduled_date} — {session.topic}{" "}
+              {session.claim_status === "대기" && <span className="badge badge--pending">승인 대기</span>}
+              {session.claim_status === "승인" && <span className="badge badge--approved">확정</span>}
             </li>
           ))}
         </ul>

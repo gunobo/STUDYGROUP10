@@ -2,7 +2,7 @@ from datetime import date, datetime
 
 from pydantic import BaseModel, ConfigDict, field_validator
 
-from app.models.session import SessionStatus
+from app.models.session import SessionClaimStatus, SessionStatus
 
 
 class SessionCreate(BaseModel):
@@ -42,6 +42,7 @@ class SessionRead(BaseModel):
     id: int
     presenter_id: int | None
     topic: str | None
+    claim_status: SessionClaimStatus | None
     scheduled_date: date
     status: SessionStatus
     material_url: str | None

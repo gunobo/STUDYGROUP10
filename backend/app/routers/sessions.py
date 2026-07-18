@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session as DBSession
 from app.db.base import get_db
 from app.deps import get_current_user, require_admin
 from app.models.application import Application, ApplicationStatus
-from app.models.session import Session, SessionStatus
+from app.models.session import Session, SessionClaimStatus, SessionStatus
 from app.models.user import User
 from app.schemas.session import SessionClaim, SessionCreate, SessionRead, SessionUpdate
 from app.senders.discord import send_discord_message
@@ -143,17 +143,56 @@ async def claim_session(
 
     session.presenter_id = user.id
     session.topic = payload.topic
+    session.claim_status = SessionClaimStatus.pending
     db.commit()
     db.refresh(session)
 
     await send_discord_message(
-        f"🎤 **{user.name}**님이 **{session.scheduled_date}** 발표를 신청했습니다!\n주제: {session.topic}"
+        f"📝 **{user.name}**님이 **{session.scheduled_date}** 발표를 신청했습니다 (관리자 승인 대기 중)\n주제: {session.topic}"
     )
 
-    event_id = await create_scheduled_event(db, session.scheduled_date, session.topic, user.name)
+    return session
+
+
+@router.post("/{session_id}/approve", response_model=SessionRead)
+async def approve_claim(session_id: int, db: DBSession = Depends(get_db), _=Depends(require_admin)):
+    session = db.get(Session, session_id)
+    if session is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "세션을 찾을 수 없습니다")
+    if session.claim_status != SessionClaimStatus.pending:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "승인 대기 중인 신청이 아닙니다")
+
+    presenter = db.get(User, session.presenter_id)
+
+    session.claim_status = SessionClaimStatus.approved
+    db.commit()
+    db.refresh(session)
+
+    await send_discord_message(
+        f"✅ **{session.scheduled_date}** 발표가 확정됐습니다! 발표자: **{presenter.name}** · 주제: {session.topic}"
+    )
+
+    event_id = await create_scheduled_event(db, session.scheduled_date, session.topic, presenter.name)
     if event_id:
         session.discord_event_id = event_id
         db.commit()
         db.refresh(session)
+
+    return session
+
+
+@router.post("/{session_id}/reject", response_model=SessionRead)
+async def reject_claim(session_id: int, db: DBSession = Depends(get_db), _=Depends(require_admin)):
+    session = db.get(Session, session_id)
+    if session is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "세션을 찾을 수 없습니다")
+    if session.claim_status != SessionClaimStatus.pending:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "승인 대기 중인 신청이 아닙니다")
+
+    session.presenter_id = None
+    session.topic = None
+    session.claim_status = None
+    db.commit()
+    db.refresh(session)
 
     return session

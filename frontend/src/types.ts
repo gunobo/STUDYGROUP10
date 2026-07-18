@@ -10,11 +10,13 @@ export interface User {
 }
 
 export type SessionStatus = "예정" | "완료" | "취소" | "연기";
+export type SessionClaimStatus = "대기" | "승인";
 
 export interface StudySession {
   id: number;
   presenter_id: number | null;
   topic: string | null;
+  claim_status: SessionClaimStatus | null;
   scheduled_date: string;
   status: SessionStatus;
   material_url: string | null;

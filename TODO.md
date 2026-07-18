@@ -35,7 +35,8 @@
 - [x] `GET /api/questions/mine`, `GET /api/feedbacks/mine` — 로그인한 사용자 본인이 남긴 질문/피드백 조회 (마이페이지용)
 - [x] 페이지네이션 — fines/applications/users/questions(unresolved) 목록에 `skip`/`limit`
 - [x] 예외 처리 통일 — 전역 핸들러가 처리 안 된 예외도 `{"detail": "서버 오류가 발생했습니다"}` 500 JSON으로 통일 응답
-- [x] 발표 날짜 오픈+신청(claim) 구조 — `sessions.presenter_id`/`topic`을 nullable로 변경(마이그레이션 적용됨). 관리자는 `scheduled_date`만 넣어 빈 슬롯 생성(`POST /api/sessions`), `GET /api/sessions/open`으로 미배정 날짜 목록 조회, 승인된 참가자가 `POST /api/sessions/{id}/claim`(주제 입력)으로 자기 발표를 등록. 이미 배정된 슬롯 재신청은 400, 미승인 사용자는 403
+- [x] 발표 날짜 오픈+신청(claim) 구조 — `sessions.presenter_id`/`topic`을 nullable로 변경(마이그레이션 적용됨). 관리자는 `scheduled_date`만 넣어 빈 슬롯 생성(`POST /api/sessions`), `GET /api/sessions/open`으로 미배정 날짜 목록 조회, 승인된 참가자가 `POST /api/sessions/{id}/claim`(주제 입력)으로 자기 발표를 신청. 이미 배정/신청된 슬롯 재신청은 400, 미승인 사용자는 403
+- [x] 발표 신청에 관리자 승인 단계 추가 — `sessions.claim_status`(대기/승인, 마이그레이션 `25cd0a46c495`) 신설. `/claim`은 이제 즉시 확정이 아니라 `claim_status='대기'`로만 등록(디스코드 이벤트도 아직 안 만듦). 관리자가 `POST /api/sessions/{id}/approve`로 승인해야 `claim_status='승인'`으로 바뀌면서 디스코드 이벤트 생성+확정 알림 발송, `POST /api/sessions/{id}/reject`로 거절하면 `presenter_id`/`topic`/`claim_status`가 전부 NULL로 리셋되어 슬롯이 다시 열림(`/open`에 재노출). 대기 상태가 아닌 세션에 승인/거절 시도하면 400. `/admin` 일정 목록에 "승인 대기" 뱃지 + 승인/거절 버튼, `/schedule`·`/sessions/:id`·마이페이지에도 대기중이면 뱃지로 구분 표시. Docker curl로 전체 플로우(신청→승인 대기 노출 안 됨→승인→재승인 400→다른 슬롯 거절→재오픈) 확인 + 브라우저로 관리자 승인 클릭 후 뱃지 사라짐/일정표 반영까지 확인 완료
 - [x] `GET /api/applications/mine` — 로그인 사용자 본인의 신청 상태 조회 (마이페이지에서 승인 여부 확인용)
 - [x] `PATCH /api/sessions/{id}`에 관리자 권한 체크 추가 (이전엔 인증 없이 아무나 세션을 수정할 수 있었던 구멍)
 - [ ] applications 승인 시 실제 로그인 권한과 자동 연결되는 로직은 없음 (신청 승인을 로그인 게이트로 쓸 건지 운영 방식 확정 필요)
