@@ -118,3 +118,7 @@ export interface Attendance {
   status: AttendanceStatus;
   checked_at: string;
 }
+
+export type ScheduleItem =
+  | { kind: "session"; date: string; session: StudySession }
+  | { kind: "event"; date: string; event: CalendarEvent };

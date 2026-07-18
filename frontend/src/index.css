@@ -533,6 +533,173 @@ section > ul > li > a {
   color: var(--color-danger);
 }
 
+/* ---------- schedule view toggle ---------- */
+
+.schedule-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.schedule-header h1 {
+  margin: 0;
+}
+
+.view-toggle {
+  display: inline-flex;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  background: var(--color-neutral-soft);
+  border-radius: var(--radius-md);
+}
+
+.view-toggle__btn {
+  background: transparent;
+  color: var(--color-text-muted);
+  padding: 0.4rem 0.9rem;
+  border-radius: 0.45rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.view-toggle__btn:hover {
+  background: var(--color-surface);
+}
+
+.view-toggle__btn--active {
+  background: var(--color-surface);
+  color: var(--color-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ---------- calendar view ---------- */
+
+.calendar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.calendar__nav {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.calendar__nav button {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  padding: 0.35rem 0.7rem;
+  border-radius: var(--radius-sm);
+}
+
+.calendar__nav button:hover {
+  background: var(--color-neutral-soft);
+}
+
+.calendar__label {
+  font-weight: 800;
+  min-width: 8rem;
+  text-align: center;
+}
+
+.calendar__today {
+  margin-left: auto;
+  font-size: 0.8rem;
+}
+
+.calendar__grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.4rem;
+}
+
+.calendar__weekday {
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  padding-bottom: 0.3rem;
+}
+
+.calendar__cell {
+  min-height: 5.5rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 0.35rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  overflow: hidden;
+}
+
+.calendar__cell--empty {
+  background: transparent;
+  border-color: transparent;
+}
+
+.calendar__cell--today {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 1px var(--color-primary);
+}
+
+.calendar__date {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+}
+
+.calendar__cell--today .calendar__date {
+  color: var(--color-primary);
+}
+
+.calendar__items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  overflow-y: auto;
+}
+
+.calendar__chip {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.35rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.calendar__chip--session {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+
+.calendar__chip--event {
+  background: var(--color-neutral-soft);
+  color: var(--color-text-muted);
+}
+
+.calendar__chip--event[data-type="설명회"] {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+
+.calendar__chip--event[data-type="공지"] {
+  background: var(--color-warning-soft);
+  color: var(--color-warning);
+}
+
+.calendar__chip--event[data-type="회의"] {
+  background: var(--color-success-soft);
+  color: var(--color-success);
+}
+
 /* ---------- badges (status text reused across pages) ---------- */
 
 .badge {
