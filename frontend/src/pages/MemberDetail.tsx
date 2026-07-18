@@ -1,18 +1,28 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import client from "../api/client";
+import ErrorMessage from "../components/ErrorMessage";
 import ScheduleCard from "../components/ScheduleCard";
+import Spinner from "../components/Spinner";
 import type { UserDetail } from "../types";
 
 export default function MemberDetail() {
   const { id } = useParams<{ id: string }>();
   const [user, setUser] = useState<UserDetail | null>(null);
+  const [error, setError] = useState(false);
 
-  useEffect(() => {
-    client.get<UserDetail>(`/users/${id}`).then(({ data }) => setUser(data));
-  }, [id]);
+  const load = () => {
+    setError(false);
+    client
+      .get<UserDetail>(`/users/${id}`)
+      .then(({ data }) => setUser(data))
+      .catch(() => setError(true));
+  };
 
-  if (!user) return <p>불러오는 중...</p>;
+  useEffect(load, [id]);
+
+  if (error) return <ErrorMessage message="참가자 정보를 불러오지 못했습니다." onRetry={load} />;
+  if (!user) return <Spinner />;
 
   return (
     <section>

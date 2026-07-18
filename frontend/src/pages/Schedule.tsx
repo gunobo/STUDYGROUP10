@@ -2,19 +2,31 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import client from "../api/client";
 import CalendarView from "../components/CalendarView";
+import ErrorMessage from "../components/ErrorMessage";
 import EventCard from "../components/EventCard";
 import ScheduleCard from "../components/ScheduleCard";
+import Spinner from "../components/Spinner";
 import type { CalendarEvent, ScheduleItem, StudySession } from "../types";
 
 export default function Schedule() {
   const [sessions, setSessions] = useState<StudySession[]>([]);
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [view, setView] = useState<"list" | "calendar">("list");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
-  useEffect(() => {
-    client.get<StudySession[]>("/sessions").then(({ data }) => setSessions(data));
-    client.get<CalendarEvent[]>("/events").then(({ data }) => setEvents(data));
-  }, []);
+  const load = () => {
+    setLoading(true);
+    setError(false);
+    Promise.all([
+      client.get<StudySession[]>("/sessions").then(({ data }) => setSessions(data)),
+      client.get<CalendarEvent[]>("/events").then(({ data }) => setEvents(data)),
+    ])
+      .catch(() => setError(true))
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(load, []);
 
   const items: ScheduleItem[] = useMemo(
     () =>
@@ -47,7 +59,11 @@ export default function Schedule() {
         </div>
       </div>
 
-      {view === "list" ? (
+      {error ? (
+        <ErrorMessage message="일정을 불러오지 못했습니다." onRetry={load} />
+      ) : loading ? (
+        <Spinner />
+      ) : view === "list" ? (
         <ul>
           {items.map((item) =>
             item.kind === "session" ? (
