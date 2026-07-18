@@ -7,7 +7,7 @@ export default function Members() {
   const [users, setUsers] = useState<User[]>([]);
 
   useEffect(() => {
-    client.get<User[]>("/users").then(({ data }) => setUsers(data));
+    client.get<User[]>("/users", { params: { approved_only: true } }).then(({ data }) => setUsers(data));
   }, []);
 
   return (

@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session as DBSession
 
 from app.db.base import get_db
 from app.deps import require_admin
+from app.models.application import Application, ApplicationStatus
 from app.models.session import Session
 from app.models.user import User
 from app.schemas.session import SessionRead
@@ -19,9 +20,17 @@ class UserDetail(UserRead):
 def list_users(
     skip: int = Query(0, ge=0),
     limit: int = Query(200, ge=1, le=500),
+    approved_only: bool = False,
     db: DBSession = Depends(get_db),
 ):
-    return db.query(User).offset(skip).limit(limit).all()
+    query = db.query(User)
+    if approved_only:
+        query = (
+            query.join(Application, Application.user_id == User.id)
+            .filter(Application.status == ApplicationStatus.approved)
+            .distinct()
+        )
+    return query.offset(skip).limit(limit).all()
 
 
 @router.get("/{user_id}", response_model=UserDetail)

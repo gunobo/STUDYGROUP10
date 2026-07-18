@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from starlette.middleware.sessions import SessionMiddleware
 
-from app import discord_bot
+from app import discord_bot, reminders
 from app.core.config import settings
 from app.routers import (
     applications,
@@ -27,8 +27,10 @@ logger = logging.getLogger("app")
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     discord_bot.launch()
+    reminders.launch()
     yield
     await discord_bot.shutdown()
+    reminders.shutdown()
 
 
 app = FastAPI(title="여름방학 회고 스터디 API", lifespan=lifespan)
