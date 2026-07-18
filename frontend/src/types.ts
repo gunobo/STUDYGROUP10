@@ -36,6 +36,7 @@ export interface CalendarEvent {
   title: string;
   description: string | null;
   event_date: string;
+  event_time: string | null;
   created_at: string;
 }
 

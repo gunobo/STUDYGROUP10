@@ -34,25 +34,23 @@ def _is_configured(row: StudySettings) -> bool:
     return bool(env_settings.discord_bot_token and _guild_id(row) and _voice_channel_id(row))
 
 
-def _start_datetime(scheduled_date: date, row: StudySettings) -> datetime:
-    hour, minute = (int(part) for part in _presentation_time(row).split(":"))
+def _combine(event_date: date, time_str: str) -> datetime:
+    hour, minute = (int(part) for part in time_str.split(":"))
     # 타임존 없는 ISO8601 문자열은 디스코드 API가 형식 오류로 거부하거나 UTC로 오해석해
     # 엉뚱한 시각에 이벤트가 뜨므로, 한국 시간(KST, UTC+9)을 명시해서 보낸다.
-    return datetime.combine(scheduled_date, time(hour=hour, minute=minute), tzinfo=KST)
+    return datetime.combine(event_date, time(hour=hour, minute=minute), tzinfo=KST)
 
 
-async def create_scheduled_event(db: DBSession, scheduled_date: date, topic: str, presenter_name: str) -> str | None:
-    """발표 신청을 디스코드 서버 이벤트로 등록. 실패해도 예외 없이 None을 반환한다."""
+async def _post_scheduled_event(
+    db: DBSession, name: str, description: str, start: datetime, end: datetime
+) -> str | None:
     row = get_settings(db)
     if not _is_configured(row):
         return None
 
-    start = _start_datetime(scheduled_date, row)
-    end = start + timedelta(minutes=_presentation_duration(row))
-
     payload = {
-        "name": f"{presenter_name} - {topic}",
-        "description": f"여름방학 회고 스터디 발표: {topic}",
+        "name": name,
+        "description": description,
         "scheduled_start_time": start.isoformat(),
         "scheduled_end_time": end.isoformat(),
         "privacy_level": 2,  # GUILD_ONLY (현재 지원되는 유일한 값)
@@ -74,6 +72,28 @@ async def create_scheduled_event(db: DBSession, scheduled_date: date, topic: str
     except httpx.HTTPError:
         logger.exception("디스코드 이벤트 생성 실패")
         return None
+
+
+async def create_scheduled_event(db: DBSession, scheduled_date: date, topic: str, presenter_name: str) -> str | None:
+    """발표 신청을 디스코드 서버 이벤트로 등록. 실패해도 예외 없이 None을 반환한다."""
+    row = get_settings(db)
+    start = _combine(scheduled_date, _presentation_time(row))
+    end = start + timedelta(minutes=_presentation_duration(row))
+    return await _post_scheduled_event(
+        db, f"{presenter_name} - {topic}", f"여름방학 회고 스터디 발표: {topic}", start, end
+    )
+
+
+async def create_calendar_event(
+    db: DBSession, event_type: str, title: str, description: str | None, event_date: date, event_time: str | None
+) -> str | None:
+    """설명회/공지/회의 등 일정 이벤트를 디스코드 서버 이벤트로 등록. 실패해도 예외 없이 None을 반환한다."""
+    row = get_settings(db)
+    start = _combine(event_date, event_time or _presentation_time(row))
+    end = start + timedelta(minutes=_presentation_duration(row))
+    return await _post_scheduled_event(
+        db, f"[{event_type}] {title}", description or f"{event_type}: {title}", start, end
+    )
 
 
 async def delete_scheduled_event(db: DBSession, event_id: str) -> None:

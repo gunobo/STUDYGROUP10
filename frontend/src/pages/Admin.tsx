@@ -35,6 +35,7 @@ interface EventForm {
   title: string;
   description: string;
   event_date: string;
+  event_time: string;
 }
 
 interface EditSessionForm {
@@ -61,7 +62,7 @@ const SESSION_STATUSES: SessionStatus[] = ["예정", "완료", "연기", "취소
 const ATTENDANCE_STATUSES: AttendanceStatus[] = ["출석", "지각", "불참"];
 const CALENDAR_EVENT_TYPES: CalendarEventType[] = ["설명회", "공지", "회의"];
 
-const EMPTY_EVENT_FORM: EventForm = { type: "공지", title: "", description: "", event_date: "" };
+const EMPTY_EVENT_FORM: EventForm = { type: "공지", title: "", description: "", event_date: "", event_time: "" };
 
 export default function Admin() {
   const currentUser = useAuthStore((state) => state.user);
@@ -354,6 +355,7 @@ export default function Admin() {
         title: eventForm.title.trim(),
         description: eventForm.description.trim() || null,
         event_date: eventForm.event_date,
+        event_time: eventForm.event_time || null,
       });
       setEventForm(EMPTY_EVENT_FORM);
       loadEvents();
@@ -371,6 +373,7 @@ export default function Admin() {
       title: event.title,
       description: event.description ?? "",
       event_date: event.event_date,
+      event_time: event.event_time ?? "",
     });
     setEditEventError("");
   };
@@ -387,6 +390,7 @@ export default function Admin() {
         title: editEventForm.title.trim(),
         description: editEventForm.description.trim() || null,
         event_date: editEventForm.event_date,
+        event_time: editEventForm.event_time || null,
       });
       setEditingEventId(null);
       loadEvents();
@@ -752,6 +756,14 @@ export default function Admin() {
           />
         </label>
         <label>
+          시간 (선택, 비워두면 발표 시작 시각으로)
+          <input
+            type="time"
+            value={eventForm.event_time}
+            onChange={(e) => setEventForm((f) => ({ ...f, event_time: e.target.value }))}
+          />
+        </label>
+        <label>
           설명 (선택)
           <textarea
             value={eventForm.description}
@@ -808,6 +820,14 @@ export default function Admin() {
                     type="date"
                     value={editEventForm.event_date}
                     onChange={(e) => setEditEventForm((f) => ({ ...f, event_date: e.target.value }))}
+                  />
+                </label>
+                <label>
+                  시간 (선택)
+                  <input
+                    type="time"
+                    value={editEventForm.event_time}
+                    onChange={(e) => setEditEventForm((f) => ({ ...f, event_time: e.target.value }))}
                   />
                 </label>
                 <label>

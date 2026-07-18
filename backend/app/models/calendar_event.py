@@ -21,4 +21,8 @@ class CalendarEvent(Base):
     title: Mapped[str] = mapped_column(String(200))
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     event_date: Mapped[date] = mapped_column(Date)
+    # 비워두면 설정된 발표 시작 시각(PRESENTATION_TIME)을 그대로 사용
+    event_time: Mapped[str | None] = mapped_column(String(5), nullable=True)
+    # 디스코드 서버 이벤트로 등록된 경우 그 id (삭제 시 정리하기 위해 보관)
+    discord_event_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())

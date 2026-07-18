@@ -43,6 +43,7 @@
 - [ ] 세션 상태 변경(연기/취소) 시 관련 벌금·질문 처리 정책 결정
 - [x] 한 날짜에 발표자 최대 3명 제한(`MAX_PRESENTERS_PER_DATE`, `app/routers/sessions.py`) — `POST /api/sessions`에서 같은 `scheduled_date`의 취소되지 않은 세션 수를 세어 그 이상이면 400. 관리자가 같은 날짜로 슬롯을 최대 3번 열면(각각 별도 row) 학생이 각각 `/claim`으로 신청 — curl로 1~3번째 성공, 4번째 400 확인 (처음엔 2명 제한으로 만들었다가 요청으로 3명으로 상향)
 - [x] `calendar_events` 테이블 + API — 발표가 아닌 설명회/공지/회의를 일정표에 추가. `type`(설명회/공지/회의)/`title`/`description`/`event_date` 필드, `GET /api/events`는 공개, `POST/PATCH/DELETE`는 관리자 전용(`app/routers/calendar_events.py`, 마이그레이션 `c40881a681f2`). curl로 CRUD·403 확인 완료
+- [x] 일정 이벤트도 디스코드 서버 이벤트로 등록 — `calendar_events.event_time`(선택, 비워두면 `PRESENTATION_TIME` 사용)/`discord_event_id` 추가(마이그레이션 `de4709938a2d`). 생성 시 `discord_events.py`의 `create_calendar_event()`로 이벤트 등록(발표용 `create_scheduled_event()`와 내부 POST 로직 공유), 삭제 시 등록된 이벤트도 같이 정리. 진행 시간은 발표와 동일하게 `PRESENTATION_DURATION_MINUTES` 재사용. 관리자 폼에 "시간(선택)" 입력 추가. Docker로 시간 미지정/지정/잘못된 형식(422) 다 확인, 가짜 토큰으로 실제 디스코드 API에 401까지 도달하는 것도 확인(요청 형식 문제 없음)
 
 ## 3. 프론트엔드 페이지
 - [x] 라우팅 (`/`, `/apply`, `/schedule`, `/sessions/:id`, `/sessions/:id/questions`, `/fines`, `/members`, `/members/:id`, `/mypage`, `/login`, `/admin`)
