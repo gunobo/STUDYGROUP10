@@ -1,5 +1,5 @@
 import logging
-from datetime import date, datetime, time, timedelta
+from datetime import date, datetime, time, timedelta, timezone
 
 import httpx
 from sqlalchemy.orm import Session as DBSession
@@ -11,6 +11,7 @@ from app.services.settings import get_settings
 logger = logging.getLogger("app")
 
 DISCORD_API = "https://discord.com/api/v10"
+KST = timezone(timedelta(hours=9))
 
 
 def _guild_id(row: StudySettings) -> str:
@@ -35,7 +36,9 @@ def _is_configured(row: StudySettings) -> bool:
 
 def _start_datetime(scheduled_date: date, row: StudySettings) -> datetime:
     hour, minute = (int(part) for part in _presentation_time(row).split(":"))
-    return datetime.combine(scheduled_date, time(hour=hour, minute=minute))
+    # 타임존 없는 ISO8601 문자열은 디스코드 API가 형식 오류로 거부하거나 UTC로 오해석해
+    # 엉뚱한 시각에 이벤트가 뜨므로, 한국 시간(KST, UTC+9)을 명시해서 보낸다.
+    return datetime.combine(scheduled_date, time(hour=hour, minute=minute), tzinfo=KST)
 
 
 async def create_scheduled_event(db: DBSession, scheduled_date: date, topic: str, presenter_name: str) -> str | None:
@@ -64,8 +67,10 @@ async def create_scheduled_event(db: DBSession, scheduled_date: date, topic: str
                 json=payload,
                 headers={"Authorization": f"Bot {env_settings.discord_bot_token}"},
             )
-            resp.raise_for_status()
-            return resp.json().get("id")
+        if resp.status_code >= 400:
+            logger.error("디스코드 이벤트 생성 실패 (HTTP %s): %s", resp.status_code, resp.text)
+            return None
+        return resp.json().get("id")
     except httpx.HTTPError:
         logger.exception("디스코드 이벤트 생성 실패")
         return None
@@ -81,7 +86,7 @@ async def delete_scheduled_event(db: DBSession, event_id: str) -> None:
                 f"{DISCORD_API}/guilds/{_guild_id(row)}/scheduled-events/{event_id}",
                 headers={"Authorization": f"Bot {env_settings.discord_bot_token}"},
             )
-            if resp.status_code != 404:
-                resp.raise_for_status()
+        if resp.status_code >= 400 and resp.status_code != 404:
+            logger.error("디스코드 이벤트 삭제 실패 (HTTP %s): %s", resp.status_code, resp.text)
     except httpx.HTTPError:
         logger.exception("디스코드 이벤트 삭제 실패")
