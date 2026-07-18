@@ -40,13 +40,14 @@
 - [x] `PATCH /api/sessions/{id}`에 관리자 권한 체크 추가 (이전엔 인증 없이 아무나 세션을 수정할 수 있었던 구멍)
 - [ ] applications 승인 시 실제 로그인 권한과 자동 연결되는 로직은 없음 (신청 승인을 로그인 게이트로 쓸 건지 운영 방식 확정 필요)
 - [ ] 세션 상태 변경(연기/취소) 시 관련 벌금·질문 처리 정책 결정
-- [ ] 세션 등 나머지 입력 검증 강화 (예: 같은 날짜 중복 세션 방지 — "발표는 하루에 한 명씩" 규칙)
+- [x] 한 날짜에 발표자 최대 2명 제한 — `POST /api/sessions`에서 같은 `scheduled_date`의 취소되지 않은 세션 수를 세어 2개 이상이면 400. 관리자가 같은 날짜로 슬롯을 2번 열면(각각 별도 row) 학생이 각각 `/claim`으로 신청 — curl로 1번째/2번째 성공, 3번째 400 확인
+- [x] `calendar_events` 테이블 + API — 발표가 아닌 설명회/공지/회의를 일정표에 추가. `type`(설명회/공지/회의)/`title`/`description`/`event_date` 필드, `GET /api/events`는 공개, `POST/PATCH/DELETE`는 관리자 전용(`app/routers/calendar_events.py`, 마이그레이션 `c40881a681f2`). curl로 CRUD·403 확인 완료
 
 ## 3. 프론트엔드 페이지
 - [x] 라우팅 (`/`, `/apply`, `/schedule`, `/sessions/:id`, `/sessions/:id/questions`, `/fines`, `/members`, `/members/:id`, `/mypage`, `/login`, `/admin`)
 - [x] AuthGuard (로그인/관리자 전용 라우트 보호)
 - [x] `/apply` — 로그인 필요, 학번/이름/전화번호/분야(2개+)/설명회 가능 시간(관리자 설정 옵션 라디오)/개인정보 동의/규칙 동의, 신청 기간 아니면 안내 문구
-- [x] `/admin` — 설정(신청 기간+설명회 옵션), 신청 승인/거절+SMS(카드형 UI), 참가자 role 변경, **날짜만 입력하는 발표 슬롯 생성**, 세션 수정 폼, **벌금 부과/면제 폼**, **출석 체크 UI** — 전부 관리자 전용 페이지 안에만 존재
+- [x] `/admin` — 설정(신청 기간+설명회 옵션+디스코드), 신청 승인/거절+SMS(카드형 UI), 참가자 role 변경, **날짜만 입력하는 발표 슬롯 생성**(같은 날짜 2개까지), 세션 수정 폼, **설명회/공지/회의 일정 이벤트 CRUD**, **벌금 부과/면제 폼**, **출석 체크 UI** — 전부 관리자 전용 페이지 안에만 존재
 - [x] `/` 홈 — 스터디 소개 전체 콘텐츠 + 다음 발표 카드 (미배정 슬롯은 "발표자 모집 중"으로 표시)
 - [x] `/sessions/:id` — Q&A 탭이 실제 질문 목록+등록 폼으로 동작, 비로그인 시 로그인 안내로 대체
 - [x] `/sessions/:id/questions` — 비로그인 시 작성 폼 대신 로그인 안내
@@ -57,6 +58,7 @@
 - [x] 반응형 CSS, 클로징 인용구 박스 `text-wrap: balance`로 줄바꿈 개선
 - [x] 전체 프론트엔드 TypeScript 전환, `types.ts` API 타입, `npm run build`가 `tsc --noEmit` 게이트
 - [ ] `/apply` 제출 후 이메일 확인 알림 (이메일 발송 인프라 없음 — 필요하면 SolAPI 알림톡/SMS로 대체 검토)
+- [x] `/schedule`, 홈 — 발표 세션과 설명회/공지/회의 일정(`calendar_events`)을 날짜순으로 합쳐서 리스트로 표시, 종류별 뱃지 색상 구분 (`EventCard.tsx`, `Schedule.tsx`). 브라우저로 렌더링 확인 완료(같은 날짜 2개 세션 + 이벤트 2개 정상 표시)
 - [ ] `/schedule`: 캘린더 뷰 (현재는 리스트만)
 - [ ] `/sessions/:id`: 퀴즈 탭 → QuizRunner 실제 연결 (관리자가 JSON으로 퀴즈 입력은 가능해졌지만 응시자용 UI는 아직 텍스트만 노출)
 - [ ] 미해결 질문 목록을 홈 화면 등에 노출 (`GET /api/questions/unresolved`)

@@ -561,6 +561,29 @@ section > ul > li > a {
   color: var(--color-danger);
 }
 
+.badge--event[data-type="설명회"] {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+
+.badge--event[data-type="공지"] {
+  background: var(--color-warning-soft);
+  color: var(--color-warning);
+}
+
+.badge--event[data-type="회의"] {
+  background: var(--color-success-soft);
+  color: var(--color-success);
+}
+
+.schedule-card--event .schedule-card__status {
+  background: none;
+  padding: 0;
+  color: var(--color-text-muted);
+  font-weight: 500;
+  white-space: normal;
+}
+
 /* ---------- session tabs ---------- */
 
 .session-tabs {

@@ -14,6 +14,8 @@ from app.senders.discord_events import create_scheduled_event, delete_scheduled_
 
 router = APIRouter(prefix="/api/sessions", tags=["sessions"])
 
+MAX_PRESENTERS_PER_DATE = 2
+
 
 @router.get("", response_model=list[SessionRead])
 def list_sessions(
@@ -45,6 +47,17 @@ def list_open_sessions(db: DBSession = Depends(get_db)):
 
 @router.post("", response_model=SessionRead, status_code=status.HTTP_201_CREATED)
 async def create_session(payload: SessionCreate, db: DBSession = Depends(get_db), _=Depends(require_admin)):
+    existing_count = (
+        db.query(Session)
+        .filter(Session.scheduled_date == payload.scheduled_date, Session.status != SessionStatus.canceled)
+        .count()
+    )
+    if existing_count >= MAX_PRESENTERS_PER_DATE:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            f"해당 날짜에는 이미 발표자가 {MAX_PRESENTERS_PER_DATE}명 배정되어 있습니다",
+        )
+
     session = Session(**payload.model_dump())
     db.add(session)
     db.commit()

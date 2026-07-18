@@ -46,7 +46,7 @@ export default function Home() {
       <div>
         <ul className="plain-list">
           <li>각자 하나의 분야 담당 (예: 알고리즘, 리눅스, AI, 보안, 네트워크 등)</li>
-          <li>발표는 하루에 한 명씩 진행</li>
+          <li>발표는 하루에 최대 2명까지 진행</li>
           <li>
             발표 자료는 노션, PDF, PPT, 벨로그 등 공유 가능한 형태면 OK (다른 사람의 자료 불펌은
             NG!)

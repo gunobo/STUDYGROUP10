@@ -12,6 +12,7 @@ from app.routers import (
     applications,
     attendances,
     auth,
+    calendar_events,
     feedbacks,
     fines,
     questions,
@@ -60,6 +61,7 @@ app.include_router(applications.router)
 app.include_router(settings_router.router)
 app.include_router(attendances.sessions_router)
 app.include_router(attendances.attendances_router)
+app.include_router(calendar_events.router)
 
 
 @app.get("/api/health")

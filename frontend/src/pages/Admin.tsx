@@ -5,6 +5,8 @@ import type {
   Application,
   Attendance,
   AttendanceStatus,
+  CalendarEvent,
+  CalendarEventType,
   Fine,
   FineReason,
   StudySession,
@@ -26,6 +28,13 @@ interface SettingsForm {
 
 interface SessionForm {
   scheduled_date: string;
+}
+
+interface EventForm {
+  type: CalendarEventType;
+  title: string;
+  description: string;
+  event_date: string;
 }
 
 interface EditSessionForm {
@@ -50,6 +59,9 @@ const toDatetimeLocal = (iso: string | null) => (iso ? iso.slice(0, 16) : "");
 const FINE_REASONS: FineReason[] = ["무단불참", "자료미준비", "무단지각", "당일취소", "기타"];
 const SESSION_STATUSES: SessionStatus[] = ["예정", "완료", "연기", "취소"];
 const ATTENDANCE_STATUSES: AttendanceStatus[] = ["출석", "지각", "불참"];
+const CALENDAR_EVENT_TYPES: CalendarEventType[] = ["설명회", "공지", "회의"];
+
+const EMPTY_EVENT_FORM: EventForm = { type: "공지", title: "", description: "", event_date: "" };
 
 export default function Admin() {
   const currentUser = useAuthStore((state) => state.user);
@@ -78,6 +90,14 @@ export default function Admin() {
   const [sessionCreating, setSessionCreating] = useState(false);
   const [sessionError, setSessionError] = useState("");
 
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [eventForm, setEventForm] = useState<EventForm>(EMPTY_EVENT_FORM);
+  const [eventCreating, setEventCreating] = useState(false);
+  const [eventError, setEventError] = useState("");
+  const [editingEventId, setEditingEventId] = useState<number | null>(null);
+  const [editEventForm, setEditEventForm] = useState<EventForm>(EMPTY_EVENT_FORM);
+  const [editEventError, setEditEventError] = useState("");
+
   const [editingSessionId, setEditingSessionId] = useState<number | null>(null);
   const [editSessionForm, setEditSessionForm] = useState<EditSessionForm>({
     status: "예정",
@@ -104,6 +124,10 @@ export default function Admin() {
 
   const loadSessions = () => {
     client.get<StudySession[]>("/sessions").then(({ data }) => setSessions(data));
+  };
+
+  const loadEvents = () => {
+    client.get<CalendarEvent[]>("/events").then(({ data }) => setEvents(data));
   };
 
   const loadFines = () => {
@@ -143,6 +167,7 @@ export default function Admin() {
 
   useEffect(() => {
     loadSessions();
+    loadEvents();
     loadFines();
     loadApplications();
     loadUsers();
@@ -283,6 +308,66 @@ export default function Admin() {
     } catch (err: any) {
       setEditSessionError(err.response?.data?.detail ?? "저장에 실패했습니다.");
     }
+  };
+
+  const createEvent = async (e: FormEvent) => {
+    e.preventDefault();
+    setEventError("");
+    if (!eventForm.title.trim() || !eventForm.event_date) {
+      setEventError("제목과 날짜를 입력하세요.");
+      return;
+    }
+    setEventCreating(true);
+    try {
+      await client.post("/events", {
+        type: eventForm.type,
+        title: eventForm.title.trim(),
+        description: eventForm.description.trim() || null,
+        event_date: eventForm.event_date,
+      });
+      setEventForm(EMPTY_EVENT_FORM);
+      loadEvents();
+    } catch (err: any) {
+      setEventError(err.response?.data?.detail ?? "일정 추가에 실패했습니다.");
+    } finally {
+      setEventCreating(false);
+    }
+  };
+
+  const startEditEvent = (event: CalendarEvent) => {
+    setEditingEventId(event.id);
+    setEditEventForm({
+      type: event.type,
+      title: event.title,
+      description: event.description ?? "",
+      event_date: event.event_date,
+    });
+    setEditEventError("");
+  };
+
+  const saveEventEdit = async (id: number) => {
+    setEditEventError("");
+    if (!editEventForm.title.trim() || !editEventForm.event_date) {
+      setEditEventError("제목과 날짜를 입력하세요.");
+      return;
+    }
+    try {
+      await client.patch(`/events/${id}`, {
+        type: editEventForm.type,
+        title: editEventForm.title.trim(),
+        description: editEventForm.description.trim() || null,
+        event_date: editEventForm.event_date,
+      });
+      setEditingEventId(null);
+      loadEvents();
+    } catch (err: any) {
+      setEditEventError(err.response?.data?.detail ?? "저장에 실패했습니다.");
+    }
+  };
+
+  const deleteEvent = async (id: number) => {
+    await client.delete(`/events/${id}`);
+    loadEvents();
   };
 
   const createFine = async (e: FormEvent) => {
@@ -585,6 +670,113 @@ export default function Admin() {
                 <button onClick={() => saveSessionEdit(s.id)}>저장</button>
                 <button onClick={() => setEditingSessionId(null)}>취소</button>
                 {editSessionError && <p className="approve-form__error">{editSessionError}</p>}
+              </div>
+            )}
+          </li>
+        ))}
+      </ul>
+
+      <h2>일정 이벤트 (설명회 · 공지 · 회의)</h2>
+      <p className="note">발표가 아닌 설명회, 공지사항, 회의 등을 일정표에 추가합니다.</p>
+      <form onSubmit={createEvent}>
+        <label>
+          종류
+          <select
+            value={eventForm.type}
+            onChange={(e) => setEventForm((f) => ({ ...f, type: e.target.value as CalendarEventType }))}
+          >
+            {CALENDAR_EVENT_TYPES.map((type) => (
+              <option key={type} value={type}>
+                {type}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          제목
+          <input
+            value={eventForm.title}
+            onChange={(e) => setEventForm((f) => ({ ...f, title: e.target.value }))}
+            placeholder="예: 오리엔테이션 설명회"
+          />
+        </label>
+        <label>
+          날짜
+          <input
+            type="date"
+            value={eventForm.event_date}
+            onChange={(e) => setEventForm((f) => ({ ...f, event_date: e.target.value }))}
+          />
+        </label>
+        <label>
+          설명 (선택)
+          <textarea
+            value={eventForm.description}
+            onChange={(e) => setEventForm((f) => ({ ...f, description: e.target.value }))}
+          />
+        </label>
+        {eventError && <p className="apply__error">{eventError}</p>}
+        <button type="submit" disabled={eventCreating}>
+          {eventCreating ? "추가 중..." : "일정 추가"}
+        </button>
+      </form>
+
+      <ul>
+        {events.map((ev) => (
+          <li key={ev.id}>
+            <span className="badge badge--event" data-type={ev.type}>
+              {ev.type}
+            </span>{" "}
+            <strong>{ev.event_date}</strong> — {ev.title}
+            {editingEventId !== ev.id && (
+              <>
+                <button onClick={() => startEditEvent(ev)}>수정</button>
+                <button onClick={() => deleteEvent(ev.id)}>삭제</button>
+              </>
+            )}
+
+            {editingEventId === ev.id && (
+              <div className="approve-form">
+                <label>
+                  종류
+                  <select
+                    value={editEventForm.type}
+                    onChange={(e) =>
+                      setEditEventForm((f) => ({ ...f, type: e.target.value as CalendarEventType }))
+                    }
+                  >
+                    {CALENDAR_EVENT_TYPES.map((type) => (
+                      <option key={type} value={type}>
+                        {type}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  제목
+                  <input
+                    value={editEventForm.title}
+                    onChange={(e) => setEditEventForm((f) => ({ ...f, title: e.target.value }))}
+                  />
+                </label>
+                <label>
+                  날짜
+                  <input
+                    type="date"
+                    value={editEventForm.event_date}
+                    onChange={(e) => setEditEventForm((f) => ({ ...f, event_date: e.target.value }))}
+                  />
+                </label>
+                <label>
+                  설명 (선택)
+                  <textarea
+                    value={editEventForm.description}
+                    onChange={(e) => setEditEventForm((f) => ({ ...f, description: e.target.value }))}
+                  />
+                </label>
+                <button onClick={() => saveEventEdit(ev.id)}>저장</button>
+                <button onClick={() => setEditingEventId(null)}>취소</button>
+                {editEventError && <p className="approve-form__error">{editEventError}</p>}
               </div>
             )}
           </li>

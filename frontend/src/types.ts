@@ -26,6 +26,17 @@ export interface StudySession {
   created_at: string;
 }
 
+export type CalendarEventType = "설명회" | "공지" | "회의";
+
+export interface CalendarEvent {
+  id: number;
+  type: CalendarEventType;
+  title: string;
+  description: string | null;
+  event_date: string;
+  created_at: string;
+}
+
 export interface Question {
   id: number;
   session_id: number;
