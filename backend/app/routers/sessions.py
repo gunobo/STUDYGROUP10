@@ -15,7 +15,7 @@ from app.senders.discord_events import create_scheduled_event, delete_scheduled_
 
 router = APIRouter(prefix="/api/sessions", tags=["sessions"])
 
-MAX_PRESENTERS_PER_DATE = 2
+MAX_PRESENTERS_PER_DATE = 3
 
 
 @router.get("", response_model=list[SessionRead])

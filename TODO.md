@@ -40,7 +40,7 @@
 - [x] `PATCH /api/sessions/{id}`에 관리자 권한 체크 추가 (이전엔 인증 없이 아무나 세션을 수정할 수 있었던 구멍)
 - [ ] applications 승인 시 실제 로그인 권한과 자동 연결되는 로직은 없음 (신청 승인을 로그인 게이트로 쓸 건지 운영 방식 확정 필요)
 - [ ] 세션 상태 변경(연기/취소) 시 관련 벌금·질문 처리 정책 결정
-- [x] 한 날짜에 발표자 최대 2명 제한 — `POST /api/sessions`에서 같은 `scheduled_date`의 취소되지 않은 세션 수를 세어 2개 이상이면 400. 관리자가 같은 날짜로 슬롯을 2번 열면(각각 별도 row) 학생이 각각 `/claim`으로 신청 — curl로 1번째/2번째 성공, 3번째 400 확인
+- [x] 한 날짜에 발표자 최대 3명 제한(`MAX_PRESENTERS_PER_DATE`, `app/routers/sessions.py`) — `POST /api/sessions`에서 같은 `scheduled_date`의 취소되지 않은 세션 수를 세어 그 이상이면 400. 관리자가 같은 날짜로 슬롯을 최대 3번 열면(각각 별도 row) 학생이 각각 `/claim`으로 신청 — curl로 1~3번째 성공, 4번째 400 확인 (처음엔 2명 제한으로 만들었다가 요청으로 3명으로 상향)
 - [x] `calendar_events` 테이블 + API — 발표가 아닌 설명회/공지/회의를 일정표에 추가. `type`(설명회/공지/회의)/`title`/`description`/`event_date` 필드, `GET /api/events`는 공개, `POST/PATCH/DELETE`는 관리자 전용(`app/routers/calendar_events.py`, 마이그레이션 `c40881a681f2`). curl로 CRUD·403 확인 완료
 
 ## 3. 프론트엔드 페이지
