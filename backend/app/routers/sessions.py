@@ -1,6 +1,7 @@
 from datetime import date
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session as DBSession
 
 from app.db.base import get_db
@@ -100,12 +101,23 @@ async def update_session(
 
 
 @router.delete("/{session_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_session(session_id: int, db: DBSession = Depends(get_db), _=Depends(require_admin)):
+async def delete_session(session_id: int, db: DBSession = Depends(get_db), _=Depends(require_admin)):
     session = db.get(Session, session_id)
     if session is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "세션을 찾을 수 없습니다")
+
+    if session.discord_event_id:
+        await delete_scheduled_event(db, session.discord_event_id)
+
     db.delete(session)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            "관련된 질문/피드백/출석/벌금 기록이 있어 삭제할 수 없습니다. 대신 상태를 '취소'로 변경해주세요.",
+        )
 
 
 @router.post("/{session_id}/claim", response_model=SessionRead)

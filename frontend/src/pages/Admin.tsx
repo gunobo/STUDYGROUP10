@@ -310,6 +310,17 @@ export default function Admin() {
     }
   };
 
+  const deleteSession = async (session: StudySession) => {
+    const label = session.topic ?? `${session.scheduled_date} (미배정)`;
+    if (!window.confirm(`"${label}" 일정을 삭제할까요? 되돌릴 수 없습니다.`)) return;
+    try {
+      await client.delete(`/sessions/${session.id}`);
+      loadSessions();
+    } catch (err: any) {
+      window.alert(err.response?.data?.detail ?? "삭제에 실패했습니다.");
+    }
+  };
+
   const createEvent = async (e: FormEvent) => {
     e.preventDefault();
     setEventError("");
@@ -365,8 +376,9 @@ export default function Admin() {
     }
   };
 
-  const deleteEvent = async (id: number) => {
-    await client.delete(`/events/${id}`);
+  const deleteEvent = async (event: CalendarEvent) => {
+    if (!window.confirm(`"${event.title}" 일정을 삭제할까요? 되돌릴 수 없습니다.`)) return;
+    await client.delete(`/events/${event.id}`);
     loadEvents();
   };
 
@@ -605,7 +617,12 @@ export default function Admin() {
             <strong>{s.scheduled_date}</strong> —{" "}
             {s.topic ?? <span className="badge badge--pending">미배정 (신청 가능)</span>}{" "}
             <span className="badge">{s.status}</span>
-            {editingSessionId !== s.id && <button onClick={() => startEditSession(s)}>수정</button>}
+            {editingSessionId !== s.id && (
+              <>
+                <button onClick={() => startEditSession(s)}>수정</button>
+                <button onClick={() => deleteSession(s)}>삭제</button>
+              </>
+            )}
 
             {editingSessionId === s.id && (
               <div className="approve-form">
@@ -731,7 +748,7 @@ export default function Admin() {
             {editingEventId !== ev.id && (
               <>
                 <button onClick={() => startEditEvent(ev)}>수정</button>
-                <button onClick={() => deleteEvent(ev.id)}>삭제</button>
+                <button onClick={() => deleteEvent(ev)}>삭제</button>
               </>
             )}
 
