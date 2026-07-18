@@ -711,8 +711,11 @@ export default function Admin() {
                   <textarea
                     value={editSessionForm.quiz_json}
                     onChange={(e) => setEditSessionForm((f) => ({ ...f, quiz_json: e.target.value }))}
-                    placeholder='{"questions": [{"question": "...", "options": ["..."]}]}'
+                    placeholder='{"questions": [{"question": "...", "options": ["...", "..."], "answer": 0, "explanation": "선택"}]}'
                   />
+                  <span className="note">
+                    answer는 정답 보기의 0부터 시작하는 인덱스(선택, 없으면 채점 없이 서술형으로 표시)
+                  </span>
                 </label>
                 <button onClick={() => saveSessionEdit(s.id)}>저장</button>
                 <button onClick={() => setEditingSessionId(null)}>취소</button>

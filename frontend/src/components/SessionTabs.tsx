@@ -4,6 +4,7 @@ import client from "../api/client";
 import { useAuthStore } from "../store/useAuthStore";
 import type { Question, StudySession } from "../types";
 import QuestionItem from "./QuestionItem";
+import QuizRunner from "./QuizRunner";
 
 const TABS = [
   { key: "concept_note", label: "개념" },
@@ -85,10 +86,12 @@ export default function SessionTabs({ session }: SessionTabsProps) {
       <div className="session-tabs__content">
         {active === "questions" ? (
           <QATab sessionId={session.id} />
+        ) : active === "quiz_json" ? (
+          <QuizRunner quiz={session.quiz_json} />
         ) : typeof session[active] === "string" ? (
           session[active]
         ) : (
-          ""
+          <p className="note">아직 등록된 내용이 없습니다.</p>
         )}
       </div>
     </div>
