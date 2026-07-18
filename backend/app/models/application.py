@@ -23,6 +23,8 @@ class Application(Base):
     phone: Mapped[str] = mapped_column(String(50))
     topics: Mapped[list] = mapped_column(JSON)
     available_time: Mapped[str] = mapped_column(String(200))
+    # 디스코드 참여 여부 자동 확인용 (숫자 사용자 ID, 선택 입력)
+    discord_id: Mapped[str | None] = mapped_column(String(32), nullable=True)
     privacy_consent: Mapped[bool] = mapped_column(Boolean, default=False)
     rules_agreed: Mapped[bool] = mapped_column(Boolean, default=False)
     status: Mapped[ApplicationStatus] = mapped_column(Enum(ApplicationStatus), default=ApplicationStatus.pending)

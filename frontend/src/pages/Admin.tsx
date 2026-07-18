@@ -7,6 +7,7 @@ import type {
   AttendanceStatus,
   CalendarEvent,
   CalendarEventType,
+  ChecklistItem,
   Fine,
   FineReason,
   StudySession,
@@ -70,6 +71,8 @@ export default function Admin() {
   const [fines, setFines] = useState<Fine[]>([]);
   const [applications, setApplications] = useState<Application[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
+  const [checklistLoading, setChecklistLoading] = useState(true);
   const [approvingId, setApprovingId] = useState<number | null>(null);
   const [orientationAt, setOrientationAt] = useState("");
   const [orientationPlace, setOrientationPlace] = useState("");
@@ -143,6 +146,14 @@ export default function Admin() {
     client.get<User[]>("/users").then(({ data }) => setUsers(data));
   };
 
+  const loadChecklist = () => {
+    setChecklistLoading(true);
+    client
+      .get<ChecklistItem[]>("/users/checklist")
+      .then(({ data }) => setChecklist(data))
+      .finally(() => setChecklistLoading(false));
+  };
+
   const loadSettings = () => {
     client.get<StudySettings>("/settings").then(({ data }) => {
       setSettingsForm({
@@ -172,6 +183,7 @@ export default function Admin() {
     loadFines();
     loadApplications();
     loadUsers();
+    loadChecklist();
     loadSettings();
   }, []);
 
@@ -613,6 +625,59 @@ export default function Admin() {
         ))}
       </ul>
       <p className="note">본인 역할은 변경할 수 없습니다.</p>
+
+      <h2>참가자 체크리스트</h2>
+      <p className="note">
+        승인된 참가자별로 발표 횟수, 발표 자료(개념/예시/실습/정리) 작성 여부, 디스코드 서버 참여
+        여부를 한눈에 봅니다. 디스코드 참여 여부는 신청 시 디스코드 아이디를 입력한 사람만
+        자동으로 확인됩니다.
+      </p>
+      {checklistLoading ? (
+        <p className="note">불러오는 중...</p>
+      ) : checklist.length === 0 ? (
+        <p className="note">승인된 참가자가 없습니다.</p>
+      ) : (
+        <div className="table-wrap">
+          <table className="fine-table">
+            <thead>
+              <tr>
+                <th>이름</th>
+                <th>발표 횟수</th>
+                <th>자료 작성</th>
+                <th>디스코드 참여</th>
+              </tr>
+            </thead>
+            <tbody>
+              {checklist.map((item) => (
+                <tr key={item.user_id}>
+                  <td>{item.name}</td>
+                  <td>{item.presentation_count}</td>
+                  <td>
+                    {item.content_complete === null ? (
+                      <span className="badge badge--pending">발표 없음</span>
+                    ) : item.content_complete ? (
+                      <span className="badge badge--approved">완료</span>
+                    ) : (
+                      <span className="badge badge--rejected">미완성</span>
+                    )}
+                  </td>
+                  <td>
+                    {item.discord_joined === null ? (
+                      <span className="badge badge--pending">
+                        {item.discord_id ? "확인 불가" : "아이디 미입력"}
+                      </span>
+                    ) : item.discord_joined ? (
+                      <span className="badge badge--approved">참여</span>
+                    ) : (
+                      <span className="badge badge--rejected">미참여</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       <h2>일정 관리</h2>
       <p className="note">

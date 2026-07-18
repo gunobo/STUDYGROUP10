@@ -12,6 +12,7 @@ class ApplicationCreate(BaseModel):
     phone: str
     topics: list[str]
     available_time: str
+    discord_id: str | None = None
     privacy_consent: bool
     rules_agreed: bool
 
@@ -19,6 +20,12 @@ class ApplicationCreate(BaseModel):
     @classmethod
     def normalize_phone(cls, value: str) -> str:
         return value.replace("-", "").strip()
+
+    @field_validator("discord_id")
+    @classmethod
+    def normalize_discord_id(cls, value: str | None) -> str | None:
+        value = (value or "").strip()
+        return value or None
 
     @field_validator("topics")
     @classmethod
@@ -60,6 +67,7 @@ class ApplicationRead(BaseModel):
     phone: str
     topics: list[str]
     available_time: str
+    discord_id: str | None
     status: ApplicationStatus
     orientation_at: datetime | None
     orientation_place: str | None

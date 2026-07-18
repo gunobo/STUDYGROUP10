@@ -87,11 +87,24 @@ export interface Application {
   phone: string;
   topics: string[];
   available_time: string;
+  discord_id: string | null;
   status: ApplicationStatus;
   orientation_at: string | null;
   orientation_place: string | null;
   sms_sent: boolean;
   created_at: string;
+}
+
+export interface ChecklistItem {
+  user_id: number;
+  name: string;
+  email: string;
+  presentation_count: number;
+  latest_session_id: number | null;
+  latest_session_date: string | null;
+  content_complete: boolean | null;
+  discord_id: string | null;
+  discord_joined: boolean | null;
 }
 
 export interface StudySettings {

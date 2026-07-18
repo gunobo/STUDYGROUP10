@@ -8,11 +8,12 @@ interface ApplyForm {
   phone: string;
   topics: string[];
   available_time: string;
+  discord_id: string;
   privacy_consent: boolean;
   rules_agreed: "" | "예" | "아니오";
 }
 
-type TextField = "student_id" | "name" | "phone" | "available_time" | "rules_agreed";
+type TextField = "student_id" | "name" | "phone" | "available_time" | "discord_id" | "rules_agreed";
 
 const initialForm: ApplyForm = {
   student_id: "",
@@ -20,6 +21,7 @@ const initialForm: ApplyForm = {
   phone: "",
   topics: ["", ""],
   available_time: "",
+  discord_id: "",
   privacy_consent: false,
   rules_agreed: "",
 };
@@ -80,6 +82,7 @@ export default function Apply() {
         phone: form.phone.replace(/-/g, "").trim(),
         topics: validTopics,
         available_time: form.available_time.trim(),
+        discord_id: form.discord_id.trim() || null,
         privacy_consent: form.privacy_consent,
         rules_agreed: form.rules_agreed === "예",
       });
@@ -140,6 +143,14 @@ export default function Apply() {
           전화번호 ('-' 제외)
           <input required value={form.phone} onChange={update("phone")} placeholder="01012345678" />
         </label>
+        <label>
+          디스코드 사용자 ID (선택)
+          <input value={form.discord_id} onChange={update("discord_id")} placeholder="예: 123456789012345678" />
+        </label>
+        <p className="note">
+          디스코드 앱 → 설정 → 고급 → 개발자 모드 켜기 → 본인 프로필 우클릭 → "ID 복사"로 확인할 수 있어요.
+          입력하지 않아도 신청은 가능합니다.
+        </p>
 
         <div>
           <label>공부할 내용 혹은 분야 (2개 이상)</label>
