@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import client from "../api/client";
 import ErrorMessage from "../components/ErrorMessage";
 import SessionTabs from "../components/SessionTabs";
 import Spinner from "../components/Spinner";
+import { useAuthStore } from "../store/useAuthStore";
 import type { StudySession } from "../types";
 
 export default function SessionDetail() {
   const { id } = useParams<{ id: string }>();
+  const currentUser = useAuthStore((state) => state.user);
   const [session, setSession] = useState<StudySession | null>(null);
   const [error, setError] = useState(false);
 
@@ -35,6 +37,11 @@ export default function SessionDetail() {
         <a href={session.material_url} target="_blank" rel="noreferrer">
           발표 자료 보기
         </a>
+      )}
+      {(currentUser?.role === "admin" || currentUser?.id === session.presenter_id) && (
+        <p>
+          <Link to={`/sessions/${session.id}/edit`}>발표 자료 작성/수정</Link>
+        </p>
       )}
       <SessionTabs session={session} />
     </section>

@@ -12,6 +12,7 @@ import MyPage from "./pages/MyPage";
 import QuestionBoard from "./pages/QuestionBoard";
 import Schedule from "./pages/Schedule";
 import SessionDetail from "./pages/SessionDetail";
+import SessionEdit from "./pages/SessionEdit";
 import { useAuthStore } from "./store/useAuthStore";
 
 export default function App() {
@@ -73,6 +74,14 @@ export default function App() {
           />
           <Route path="/schedule" element={<Schedule />} />
           <Route path="/sessions/:id" element={<SessionDetail />} />
+          <Route
+            path="/sessions/:id/edit"
+            element={
+              <AuthGuard>
+                <SessionEdit />
+              </AuthGuard>
+            }
+          />
           <Route path="/sessions/:id/questions" element={<QuestionBoard />} />
           <Route path="/fines" element={<Fines />} />
           <Route path="/members" element={<Members />} />

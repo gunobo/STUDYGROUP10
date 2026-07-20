@@ -8,7 +8,7 @@ from app.db.base import get_db
 from app.deps import get_current_user, require_admin
 from app.models.application import Application, ApplicationStatus
 from app.models.session import Session, SessionClaimStatus, SessionStatus
-from app.models.user import User
+from app.models.user import User, UserRole
 from app.schemas.session import SessionClaim, SessionCreate, SessionRead, SessionUpdate
 from app.senders.discord import send_discord_message
 from app.senders.discord_events import create_scheduled_event, delete_scheduled_event, update_scheduled_event
@@ -16,6 +16,46 @@ from app.senders.discord_events import create_scheduled_event, delete_scheduled_
 router = APIRouter(prefix="/api/sessions", tags=["sessions"])
 
 MAX_PRESENTERS_PER_DATE = 3
+
+# 발표자 본인은 이 필드들(발표 자료)만 수정 가능. 날짜/주제/상태는 관리자 전용.
+PRESENTER_EDITABLE_FIELDS = {
+    "material_url",
+    "concept_note",
+    "example_note",
+    "demo_note",
+    "summary_note",
+    "quiz_json",
+}
+
+
+async def _ensure_open_slot(db: DBSession, scheduled_date: date) -> None:
+    """이 날짜에 아직 정원(MAX_PRESENTERS_PER_DATE)이 남았는데 신청 가능한 빈 슬롯이
+    없으면 하나 자동으로 열어서, 한 명이 신청했다고 바로 날짜가 잠기지 않게 한다."""
+    existing_count = (
+        db.query(Session)
+        .filter(Session.scheduled_date == scheduled_date, Session.status != SessionStatus.canceled)
+        .count()
+    )
+    if existing_count >= MAX_PRESENTERS_PER_DATE:
+        return
+
+    open_count = (
+        db.query(Session)
+        .filter(
+            Session.scheduled_date == scheduled_date,
+            Session.presenter_id.is_(None),
+            Session.status != SessionStatus.canceled,
+        )
+        .count()
+    )
+    if open_count > 0:
+        return
+
+    db.add(Session(scheduled_date=scheduled_date))
+    db.commit()
+    await send_discord_message(
+        f"📅 **{scheduled_date}**에 아직 자리가 남아 있습니다 — 마이페이지에서 신청하세요!"
+    )
 
 
 @router.get("", response_model=list[SessionRead])
@@ -83,13 +123,20 @@ async def update_session(
     session_id: int,
     payload: SessionUpdate,
     db: DBSession = Depends(get_db),
-    _=Depends(require_admin),
+    user: User = Depends(get_current_user),
 ):
     session = db.get(Session, session_id)
     if session is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "세션을 찾을 수 없습니다")
 
     changed_fields = payload.model_dump(exclude_unset=True)
+
+    if user.role != UserRole.admin:
+        if session.presenter_id != user.id:
+            raise HTTPException(status.HTTP_403_FORBIDDEN, "본인 발표만 수정할 수 있습니다")
+        if not set(changed_fields).issubset(PRESENTER_EDITABLE_FIELDS):
+            raise HTTPException(status.HTTP_403_FORBIDDEN, "발표 자료 항목만 수정할 수 있습니다")
+
     for field, value in changed_fields.items():
         setattr(session, field, value)
 
@@ -157,6 +204,8 @@ async def claim_session(
     await send_discord_message(
         f"📝 **{user.name}**님이 **{session.scheduled_date}** 발표를 신청했습니다 (관리자 승인 대기 중)\n주제: {session.topic}"
     )
+
+    await _ensure_open_slot(db, session.scheduled_date)
 
     return session
 
