@@ -40,6 +40,7 @@ interface EventForm {
 }
 
 interface EditSessionForm {
+  topic: string;
   status: SessionStatus;
   material_url: string;
   concept_note: string;
@@ -58,7 +59,7 @@ interface FineForm {
 
 const toDatetimeLocal = (iso: string | null) => (iso ? iso.slice(0, 16) : "");
 
-const FINE_REASONS: FineReason[] = ["무단불참", "자료미준비", "무단지각", "당일취소", "기타"];
+const FINE_REASONS: FineReason[] = ["무단불참", "자료미준비", "무단지각", "당일취소", "숙제안함", "기타"];
 const SESSION_STATUSES: SessionStatus[] = ["예정", "완료", "연기", "취소"];
 const ATTENDANCE_STATUSES: AttendanceStatus[] = ["출석", "지각", "불참"];
 const CALENDAR_EVENT_TYPES: CalendarEventType[] = ["설명회", "공지", "회의"];
@@ -104,6 +105,7 @@ export default function Admin() {
 
   const [editingSessionId, setEditingSessionId] = useState<number | null>(null);
   const [editSessionForm, setEditSessionForm] = useState<EditSessionForm>({
+    topic: "",
     status: "예정",
     material_url: "",
     concept_note: "",
@@ -284,6 +286,7 @@ export default function Admin() {
   const startEditSession = (session: StudySession) => {
     setEditingSessionId(session.id);
     setEditSessionForm({
+      topic: session.topic ?? "",
       status: session.status,
       material_url: session.material_url ?? "",
       concept_note: session.concept_note ?? "",
@@ -308,6 +311,7 @@ export default function Admin() {
     }
     try {
       await client.patch(`/sessions/${id}`, {
+        topic: editSessionForm.topic.trim() || null,
         status: editSessionForm.status,
         material_url: editSessionForm.material_url.trim() || null,
         concept_note: editSessionForm.concept_note.trim() || null,
@@ -721,6 +725,14 @@ export default function Admin() {
 
             {editingSessionId === s.id && (
               <div className="approve-form">
+                <label>
+                  발표 주제
+                  <input
+                    value={editSessionForm.topic}
+                    onChange={(e) => setEditSessionForm((f) => ({ ...f, topic: e.target.value }))}
+                    placeholder="예: 알고리즘 기초"
+                  />
+                </label>
                 <label>
                   상태
                   <select

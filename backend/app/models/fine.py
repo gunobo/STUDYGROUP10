@@ -14,6 +14,7 @@ class FineReason(str, enum.Enum):
     unprepared = "자료미준비"
     late = "무단지각"
     same_day_cancel = "당일취소"
+    homework_incomplete = "숙제안함"
     other = "기타"
 
 

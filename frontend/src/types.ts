@@ -60,7 +60,7 @@ export interface Feedback {
   created_at: string;
 }
 
-export type FineReason = "무단불참" | "자료미준비" | "무단지각" | "당일취소" | "기타";
+export type FineReason = "무단불참" | "자료미준비" | "무단지각" | "당일취소" | "숙제안함" | "기타";
 
 export interface Fine {
   id: number;

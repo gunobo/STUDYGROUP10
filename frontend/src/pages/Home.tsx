@@ -31,7 +31,7 @@ export default function Home() {
     <section>
       <h1>여름방학 회고 스터디</h1>
       <p>
-        각자 하나의 분야를 맡아 3일 동안 공부한 뒤, 디스코드에서 다른 사람들에게 발표하는
+        각자 하나의 분야를 맡아 일정 기간 동안 공부한 뒤, 디스코드에서 다른 사람들에게 발표하는
         스터디입니다. 혼자 공부하는 것에서 끝나는 게 아니라, 직접 설명하고 질문을 받으며
         이해도를 높이는 것이 목표입니다.
       </p>
@@ -56,7 +56,7 @@ export default function Home() {
 
       <h2>진행 방식</h2>
       <div className="flow-row">
-        <span className="flow-row__step">3일 공부</span>
+        <span className="flow-row__step">일정 기간 공부</span>
         <span className="flow-row__arrow">→</span>
         <span className="flow-row__step">발표</span>
         <span className="flow-row__arrow">→</span>
