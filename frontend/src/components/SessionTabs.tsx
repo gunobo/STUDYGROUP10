@@ -2,7 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import client from "../api/client";
 import { useAuthStore } from "../store/useAuthStore";
-import type { Question, StudySession } from "../types";
+import type { Feedback, Question, StudySession } from "../types";
 import QuestionItem from "./QuestionItem";
 import QuizRunner from "./QuizRunner";
 
@@ -12,6 +12,7 @@ const TABS = [
   { key: "demo_note", label: "시연/실습" },
   { key: "questions", label: "Q&A" },
   { key: "quiz_json", label: "퀴즈/정리" },
+  { key: "feedback", label: "피드백" },
 ] as const;
 
 function QATab({ sessionId }: { sessionId: number }) {
@@ -63,6 +64,54 @@ function QATab({ sessionId }: { sessionId: number }) {
   );
 }
 
+function FeedbackTab({ sessionId }: { sessionId: number }) {
+  const user = useAuthStore((state) => state.user);
+  const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
+  const [content, setContent] = useState("");
+
+  const load = () => {
+    client.get<Feedback[]>(`/sessions/${sessionId}/feedbacks`).then(({ data }) => setFeedbacks(data));
+  };
+
+  useEffect(load, [sessionId]);
+
+  const submit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!content.trim()) return;
+    await client.post(`/sessions/${sessionId}/feedbacks`, { content });
+    setContent("");
+    load();
+  };
+
+  return (
+    <div className="qa-tab">
+      {user ? (
+        <form className="question-form" onSubmit={submit}>
+          <input value={content} onChange={(e) => setContent(e.target.value)} placeholder="발표에 대한 피드백을 남겨주세요" />
+          <button type="submit">등록</button>
+        </form>
+      ) : (
+        <p className="note">
+          로그인 후 피드백을 남길 수 있습니다. <a href="/api/auth/google/login">구글 계정으로 로그인</a>
+        </p>
+      )}
+      {feedbacks.length === 0 ? (
+        <p className="note">아직 등록된 피드백이 없습니다.</p>
+      ) : (
+        <ul className="qa-tab__list">
+          {feedbacks.map((f) => (
+            <li key={f.id}>
+              <div className="question-item">
+                <p>{f.content}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 interface SessionTabsProps {
   session: StudySession;
 }
@@ -86,6 +135,8 @@ export default function SessionTabs({ session }: SessionTabsProps) {
       <div className="session-tabs__content">
         {active === "questions" ? (
           <QATab sessionId={session.id} />
+        ) : active === "feedback" ? (
+          <FeedbackTab sessionId={session.id} />
         ) : active === "quiz_json" ? (
           <QuizRunner quiz={session.quiz_json} />
         ) : typeof session[active] === "string" ? (
