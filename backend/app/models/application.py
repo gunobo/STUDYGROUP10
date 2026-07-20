@@ -23,8 +23,10 @@ class Application(Base):
     phone: Mapped[str] = mapped_column(String(50))
     topics: Mapped[list] = mapped_column(JSON)
     available_time: Mapped[str] = mapped_column(String(200))
-    # 디스코드 참여 여부 자동 확인용 (숫자 사용자 ID, 선택 입력)
+    # 디스코드 참여 여부 확인용 참고 정보(숫자 사용자 ID, 선택 입력). 실제 참여 여부는
+    # discord_joined에 관리자가 체크리스트에서 직접 표시한다.
     discord_id: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    discord_joined: Mapped[bool] = mapped_column(Boolean, default=False)
     privacy_consent: Mapped[bool] = mapped_column(Boolean, default=False)
     rules_agreed: Mapped[bool] = mapped_column(Boolean, default=False)
     status: Mapped[ApplicationStatus] = mapped_column(Enum(ApplicationStatus), default=ApplicationStatus.pending)

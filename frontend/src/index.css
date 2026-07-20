@@ -718,6 +718,15 @@ section > ul > li > a {
   color: var(--color-text-muted);
 }
 
+.badge-toggle {
+  border: none;
+  cursor: pointer;
+}
+
+.badge-toggle:hover {
+  filter: brightness(0.95);
+}
+
 .badge--approved {
   background: var(--color-success-soft);
   color: var(--color-success);

@@ -104,7 +104,7 @@ export interface ChecklistItem {
   latest_session_date: string | null;
   content_complete: boolean | null;
   discord_id: string | null;
-  discord_joined: boolean | null;
+  discord_joined: boolean;
 }
 
 export interface StudySettings {

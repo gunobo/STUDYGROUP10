@@ -29,4 +29,8 @@ class ChecklistItem(BaseModel):
     latest_session_date: date | None
     content_complete: bool | None
     discord_id: str | None
-    discord_joined: bool | None
+    discord_joined: bool
+
+
+class ChecklistUpdate(BaseModel):
+    discord_joined: bool

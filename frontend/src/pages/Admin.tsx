@@ -156,6 +156,13 @@ export default function Admin() {
       .finally(() => setChecklistLoading(false));
   };
 
+  const toggleDiscordJoined = async (item: ChecklistItem) => {
+    const { data } = await client.patch<ChecklistItem>(`/users/checklist/${item.user_id}`, {
+      discord_joined: !item.discord_joined,
+    });
+    setChecklist((list) => list.map((i) => (i.user_id === data.user_id ? data : i)));
+  };
+
   const loadSettings = () => {
     client.get<StudySettings>("/settings").then(({ data }) => {
       setSettingsForm({
@@ -632,9 +639,9 @@ export default function Admin() {
 
       <h2>참가자 체크리스트</h2>
       <p className="note">
-        승인된 참가자별로 발표 횟수, 발표 자료(개념/예시/실습/정리) 작성 여부, 디스코드 서버 참여
-        여부를 한눈에 봅니다. 디스코드 참여 여부는 신청 시 디스코드 아이디를 입력한 사람만
-        자동으로 확인됩니다.
+        승인된 참가자별로 발표 횟수, 발표 자료(개념/예시/실습/정리) 작성 여부를 한눈에 봅니다.
+        디스코드 참여 여부는 자동 확인이 아니라 뱃지를 클릭해서 직접 표시합니다 (신청 시 남긴
+        디스코드 아이디를 참고해서 확인하세요).
       </p>
       {checklistLoading ? (
         <p className="note">불러오는 중...</p>
@@ -666,15 +673,14 @@ export default function Admin() {
                     )}
                   </td>
                   <td>
-                    {item.discord_joined === null ? (
-                      <span className="badge badge--pending">
-                        {item.discord_id ? "확인 불가" : "아이디 미입력"}
-                      </span>
-                    ) : item.discord_joined ? (
-                      <span className="badge badge--approved">참여</span>
-                    ) : (
-                      <span className="badge badge--rejected">미참여</span>
-                    )}
+                    <button
+                      type="button"
+                      className={`badge-toggle badge ${item.discord_joined ? "badge--approved" : "badge--rejected"}`}
+                      title={item.discord_id ? `디스코드 ID: ${item.discord_id}` : "디스코드 ID 미입력"}
+                      onClick={() => toggleDiscordJoined(item)}
+                    >
+                      {item.discord_joined ? "참여" : "미참여"}
+                    </button>
                   </td>
                 </tr>
               ))}

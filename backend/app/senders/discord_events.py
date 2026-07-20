@@ -126,28 +126,6 @@ async def update_scheduled_event(
         logger.exception("디스코드 이벤트 수정 실패")
 
 
-async def check_guild_membership(db: DBSession, discord_user_id: str) -> bool | None:
-    """해당 디스코드 사용자 ID가 스터디 서버 멤버인지 확인. 봇 미설정/조회 실패 시 None(확인 불가)."""
-    row = get_settings(db)
-    if not (env_settings.discord_bot_token and _guild_id(row)):
-        return None
-    try:
-        async with httpx.AsyncClient(timeout=10) as client:
-            resp = await client.get(
-                f"{DISCORD_API}/guilds/{_guild_id(row)}/members/{discord_user_id}",
-                headers={"Authorization": f"Bot {env_settings.discord_bot_token}"},
-            )
-        if resp.status_code == 200:
-            return True
-        if resp.status_code == 404:
-            return False
-        logger.error("디스코드 멤버 조회 실패 (HTTP %s): %s", resp.status_code, resp.text)
-        return None
-    except httpx.HTTPError:
-        logger.exception("디스코드 멤버 조회 실패")
-        return None
-
-
 async def delete_scheduled_event(db: DBSession, event_id: str) -> None:
     row = get_settings(db)
     if not _is_configured(row):
